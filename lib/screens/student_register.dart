@@ -31,11 +31,15 @@ class _StudentRegisterState extends State<StudentRegister> {
   // Function to send data and image to the server
   Future<void> _registerStudent() async {
     if (_image == null) {
-      print('Please Fill All Details');
+      setState(() {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Please fill all the details")),
+        );
+      });
       return;
     }
 
-    final uri = Uri.parse('http://10.0.2.2/attendance_api/student_register.php');
+    final uri = Uri.parse('https://703f-106-79-192-174.ngrok-free.app/attendance_api/student_register.php');
     var request = http.MultipartRequest('POST', uri)
       ..fields['username'] = _usernameController.text
       ..fields['password'] = _passwordController.text
@@ -44,12 +48,27 @@ class _StudentRegisterState extends State<StudentRegister> {
     // Attach the image file
       ..files.add(await http.MultipartFile.fromPath('image', _image!.path));
 
+      _usernameController.text= "";
+      _passwordController.text="";
+      _prnController.text="";
+      _emailController.text="";
+      _image=null;
     try {
       var response = await request.send();
       if (response.statusCode == 200) {
-        print('Student registered successfully');
+        // Parse response to check for successful registration
+      setState(() {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Student registered successfully!")),
+        );
+      });
       } else {
-        print('Failed to register student');
+       // Handle registration error
+      setState(() {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to register student. Try again.")),
+        );
+      });
       }
     } catch (e) {
       print('Error: $e');
