@@ -3,6 +3,7 @@ import 'package:sqflite/sqflite.dart'; // Add this in pubspec.yaml
 import 'package:path/path.dart'; // For database path
 import 'screens/student_register.dart';
 import 'screens/student_login.dart';
+import 'screens/add_class.dart';
 import 'widgets/custom_button.dart';
 
 void main() {
@@ -57,6 +58,15 @@ class HomeScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => StudentsList()),
+                );
+              },
+            ),
+            CustomButton(
+              text: 'Add Classes',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => AddClassScreen()),
                 );
               },
             ),
