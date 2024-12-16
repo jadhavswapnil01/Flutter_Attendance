@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:sqflite/sqflite.dart'; // Add this in pubspec.yaml
-import 'package:path/path.dart'; // For database path
+// import 'package:sqflite/sqflite.dart';
+// import 'package:path/path.dart';
 import 'screens/student_register.dart';
 import 'screens/student_login.dart';
 import 'screens/teacher_register.dart'; // Import Teacher Registration
@@ -18,7 +18,10 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Attendance App',
-      theme: ThemeData(primarySwatch: Colors.blue),
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        fontFamily: 'Roboto',
+      ),
       home: const HomeScreen(),
     );
   }
@@ -226,7 +229,10 @@ class StudentsList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Stored Students')),
+      appBar: AppBar(
+        title: const Text('Stored Students'),
+        backgroundColor: const Color(0xFF1976D2),
+      ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: DatabaseHelper.fetchAllStudents(),
         builder: (context, snapshot) {
@@ -240,9 +246,14 @@ class StudentsList extends StatelessWidget {
             itemCount: snapshot.data!.length,
             itemBuilder: (context, index) {
               final student = snapshot.data![index];
-              return ListTile(
-                title: Text(student['username']),
-                subtitle: Text('PRN: ${student['prn']}, Email: ${student['email']}'),
+              return Card(
+                margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                child: ListTile(
+                  title: Text(student['username']),
+                  subtitle: Text('PRN: ${student['prn']}\nEmail: ${student['email']}'),
+                  leading: const Icon(Icons.person, color: Color(0xFF1976D2)),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 18),
+                ),
               );
             },
           );
