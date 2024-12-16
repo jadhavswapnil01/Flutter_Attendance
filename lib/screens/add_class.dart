@@ -35,7 +35,7 @@ class _AddClassScreenState extends State<AddClassScreen> {
         final responseData = response.body;
         _responseMessage = responseData.contains('"success":true')
             ? 'Class added successfully!'
-            : 'Failed to add class.';
+            : 'Failed To Add Class.';
       } else {
         _responseMessage = 'Error: Unable to connect to server.';
       }
