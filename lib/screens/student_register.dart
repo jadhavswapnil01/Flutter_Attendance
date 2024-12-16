@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -6,11 +7,13 @@ import 'package:uuid/uuid.dart';
 import '../helpers/database_helper.dart'; // Adjust as per your structure
 
 class StudentRegister extends StatefulWidget {
-  const StudentRegister({Key? key}) : super(key: key);
+  const StudentRegister({super.key});
 
   @override
   State<StudentRegister> createState() => _StudentRegisterState();
+  
 }
+
 
 class _StudentRegisterState extends State<StudentRegister> {
   final _formKey = GlobalKey<FormState>();
@@ -20,8 +23,17 @@ class _StudentRegisterState extends State<StudentRegister> {
   final _prnController = TextEditingController();
   File? _image;
   final ImagePicker _picker = ImagePicker();
+  List<Map<String, dynamic>> _classes = [];
+  String? _selectedClassId; // For storing the selected class
+
   bool _isLoading = false;
   final Uuid uuid = Uuid();
+  @override
+  void initState() {
+    super.initState();
+    _fetchClasses(); // Fetch classes when the widget is initialized
+  }
+
 
   Future<void> _pickImage() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
@@ -31,6 +43,22 @@ class _StudentRegisterState extends State<StudentRegister> {
       });
     }
   }
+  Future<void> _fetchClasses() async {
+  const url = 'https://f3a3-2402-3a80-1aa3-6d5-31c6-a80a-9a5-c1a9.ngrok-free.app/attendance_api/get_classes.php';
+  try {
+    final response = await http.get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      setState(() {
+        _classes = List<Map<String, dynamic>>.from(jsonDecode(response.body));
+      });
+    } else {
+      throw Exception('Failed to load classes');
+    }
+  } catch (e) {
+    debugPrint('Error fetching classes: $e');
+  }
+}
+
 
   Future<void> _registerStudent() async {
     if (_formKey.currentState!.validate()) {
@@ -46,14 +74,16 @@ class _StudentRegisterState extends State<StudentRegister> {
 
       final String studentUuid = uuid.v4();
       final uri = Uri.parse(
-          'https://df94-2402-8100-39cc-ba4b-899a-2eea-5b66-b943.ngrok-free.app/attendance_api/student_register.php');
+          'https://f3a3-2402-3a80-1aa3-6d5-31c6-a80a-9a5-c1a9.ngrok-free.app/attendance_api/student_register.php');
       var request = http.MultipartRequest('POST', uri)
         ..fields['username'] = _usernameController.text
         ..fields['password'] = _passwordController.text
         ..fields['prn'] = _prnController.text
         ..fields['email'] = _emailController.text
         ..fields['uuid'] = studentUuid
+        ..fields['class_id'] = _selectedClassId ?? '' // Add selected class_id
         ..files.add(await http.MultipartFile.fromPath('image', _image!.path));
+        
 
       try {
         var response = await request.send();
@@ -147,6 +177,49 @@ class _StudentRegisterState extends State<StudentRegister> {
                         label: 'PRN',
                         icon: Icons.numbers,
                       ),
+                      Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      child: DropdownButtonFormField<String>(
+                        value: _selectedClassId,
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedClassId = value;
+                          });
+                        },
+                        items: _classes
+                            .map((classData) => DropdownMenuItem(
+                                  value: classData['id'].toString(),
+                                  child: Text(
+                                    classData['class_name'],
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
+                                ))
+                            .toList(),
+                        decoration: InputDecoration(
+                          labelText: 'Select Class',
+                          labelStyle: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 16,
+                          ),
+                          filled: true,
+                          fillColor: Colors.white.withOpacity(0.9),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(30),
+                            borderSide: BorderSide.none,
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(30),
+                            borderSide: const BorderSide(color: Colors.blue, width: 2),
+                          ),
+                        ),
+                        validator: (value) => value == null ? 'Please select a class' : null,
+                        style: const TextStyle(color: Colors.black, fontSize: 16),
+                        icon: const Icon(Icons.arrow_drop_down, color: Colors.blue),
+                        dropdownColor: Colors.white,
+                      ),
+                    ),
+
                       const SizedBox(height: 20),
                       _image != null
                           ? Column(

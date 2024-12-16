@@ -100,16 +100,6 @@ class HomeScreen extends StatelessWidget {
                   },
                 ),
                 CustomButtonWithIcon(
-                  text: 'View All Students',
-                  icon: Icons.list_alt,
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => StudentsList()),
-                    );
-                  },
-                ),
-                CustomButtonWithIcon(
                   text: 'Add Classes',
                   icon: Icons.class_,
                   onPressed: () {
@@ -119,6 +109,17 @@ class HomeScreen extends StatelessWidget {
                     );
                   },
                 ),
+                CustomButtonWithIcon(
+                  text: 'View All Students',
+                  icon: Icons.list_alt,
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => StudentsList()),
+                    );
+                  },
+                ),
+                
               ],
             ),
           ),
@@ -138,8 +139,8 @@ class CustomButtonWithIcon extends StatelessWidget {
     required this.text,
     required this.icon,
     required this.onPressed,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

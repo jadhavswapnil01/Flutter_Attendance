@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class AddClassScreen extends StatefulWidget {
+  const AddClassScreen({super.key});
+
   @override
-  _AddClassScreenState createState() => _AddClassScreenState();
+  State<AddClassScreen> createState() => _AddClassScreenState();
 }
 
 class _AddClassScreenState extends State<AddClassScreen> {
@@ -18,7 +20,7 @@ class _AddClassScreenState extends State<AddClassScreen> {
     });
 
     final response = await http.post(
-      Uri.parse('https://df94-2402-8100-39cc-ba4b-899a-2eea-5b66-b943.ngrok-free.app/attendance_api/add_class.php'),
+      Uri.parse('https://f3a3-2402-3a80-1aa3-6d5-31c6-a80a-9a5-c1a9.ngrok-free.app/attendance_api/add_class.php'),
       body: {
         'class_name': _classNameController.text,
         'subject_codes': _subjectCodesController.text,
