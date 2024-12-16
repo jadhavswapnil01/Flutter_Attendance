@@ -3,9 +3,12 @@ import 'package:flutter/material.dart';
 // import 'package:path/path.dart';
 import 'screens/student_register.dart';
 import 'screens/student_login.dart';
-import 'screens/teacher_register.dart'; // Import Teacher Registration
-import 'screens/teacher_login.dart'; // Import Teacher Login
-import 'widgets/custom_button.dart';
+import 'screens/add_class.dart';
+import 'helpers/database_helper.dart';
+// import 'widgets/custom_button.dart';
+import 'screens/teacher_login.dart';
+import 'screens/teacher_register.dart';
+
 
 void main() {
   runApp(const MyApp());
@@ -33,31 +36,75 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Attendance App')),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CustomButton(
-              text: 'Student Register',
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => StudentRegister()),
-                );
-              },
+      appBar: AppBar(
+        title: const Text(
+          'Attendance App',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        elevation: 0,
+        backgroundColor: Colors.white,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF1976D2), Color(0xFF42A5F5)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-            CustomButton(
-              text: 'Student Login',
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => StudentLogin()),
-                );
-              },
-            ),
-            CustomButton(
-              text: 'Teacher Register', // Add Teacher Register Button
+          ),
+        ),
+      ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFFE3F2FD), Color(0xFFBBDEFB)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Center(
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.school_rounded,
+                  size: 100,
+                  color: Color(0xFF1976D2),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Welcome to Attendance App',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1976D2),
+                  ),
+                ),
+                const SizedBox(height: 30),
+                // Custom Button Widgets
+                CustomButtonWithIcon(
+                  text: 'Student Register',
+                  icon: Icons.person_add_alt_1,
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => StudentRegister()),
+                    );
+                  },
+                ),
+                CustomButtonWithIcon(
+                text: 'Student Login',
+                icon: Icons.login,
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const StudentLogin()),
+                  );
+                },
+                ),
+                CustomButtonWithIcon(
+              text: 'Teacher Register',
+              icon: Icons.person_add_alt_1, // Add Teacher Register Button
               onPressed: () {
                 Navigator.push(
                   context,
@@ -65,8 +112,9 @@ class HomeScreen extends StatelessWidget {
                 );
               },
             ),
-            CustomButton(
-              text: 'Teacher Login', // Add Teacher Login Button
+            CustomButtonWithIcon(
+              text: 'Teacher Login',
+              icon: Icons.person_add_alt_1, // Add Teacher Login Button
               onPressed: () {
                 Navigator.push(
                   context,
@@ -74,153 +122,78 @@ class HomeScreen extends StatelessWidget {
                 );
               },
             ),
-            CustomButton(
-              text: 'View All Students',
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => StudentsList()),
-                );
-              },
+                CustomButtonWithIcon(
+                  text: 'Add Classes',
+                  icon: Icons.class_,
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => AddClassScreen()),
+                    );
+                  },
+                ),
+                CustomButtonWithIcon(
+                  text: 'View All Students',
+                  icon: Icons.list_alt,
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => StudentsList()),
+                    );
+                  },
+                ),
+                
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 }
 
-// Database Helper
-class DatabaseHelper {
-  static Database? _database;
+// Custom Button with Icon
+class CustomButtonWithIcon extends StatelessWidget {
+  final String text;
+  final IconData icon;
+  final VoidCallback onPressed;
 
-  // Initialize database
-  static Future<void> initDatabase() async {
-    if (_database != null) return;
-    try {
-      String dbPath = await getDatabasesPath();
-      String path = join(dbPath, 'attendance.db'); // Changed database name
-      _database = await openDatabase(
-        path,
-        version: 1,
-        onCreate: (db, version) async {
-          // Create students table
-          await db.execute('''
-            CREATE TABLE students (
-              id INTEGER PRIMARY KEY AUTOINCREMENT,
-              username TEXT NOT NULL,
-              prn TEXT NOT NULL,
-              email TEXT NOT NULL,
-              uuid TEXT NOT NULL
-            )
-          ''');
-          // Create teachers table
-          await db.execute('''
-            CREATE TABLE teachers (
-              id INTEGER PRIMARY KEY AUTOINCREMENT,
-              teacher_id TEXT NOT NULL,
-              email TEXT NOT NULL,
-              username TEXT NOT NULL,
-              password TEXT NOT NULL
-            )
-          ''');
-        },
-      );
-      debugPrint("Database initialized at $path");
-    } catch (e) {
-      debugPrint("Error initializing database: $e");
-    }
-  }
+  const CustomButtonWithIcon({
+    required this.text,
+    required this.icon,
+    required this.onPressed,
+    super.key,
+  });
 
-  // Save Student
-  static Future<void> saveStudent({
-    required String username,
-    required String prn,
-    required String email,
-    required String uuid,
-  }) async {
-    if (_database == null) await initDatabase();
-    try {
-      await _database?.insert(
-        'students',
-        {
-          'username': username,
-          'prn': prn,
-          'email': email,
-          'uuid': uuid,
-        },
-      );
-      debugPrint("Student $username inserted successfully.");
-    } catch (e) {
-      debugPrint("Error saving student: $e");
-    }
-  }
-
-  // Save Teacher
-  static Future<void> saveTeacher({
-    required String teacherId,
-    required String email,
-    required String username,
-    required String password,
-  }) async {
-    if (_database == null) await initDatabase();
-    try {
-      await _database?.insert(
-        'teachers',
-        {
-          'teacher_id': teacherId,
-          'email': email,
-          'username': username,
-          'password': password,
-        },
-      );
-      debugPrint("Teacher $username inserted successfully.");
-    } catch (e) {
-      debugPrint("Error saving teacher: $e");
-    }
-  }
-
-  // Fetch all students
-  static Future<List<Map<String, dynamic>>> fetchAllStudents() async {
-    if (_database == null) await initDatabase();
-    try {
-      return await _database!.query('students');
-    } catch (e) {
-      debugPrint("Error fetching students: $e");
-      return [];
-    }
-  }
-
-  // Fetch all teachers
-  static Future<List<Map<String, dynamic>>> fetchAllTeachers() async {
-    if (_database == null) await initDatabase();
-    try {
-      return await _database!.query('teachers');
-    } catch (e) {
-      debugPrint("Error fetching teachers: $e");
-      return [];
-    }
-  }
-
-  // Validate Teacher Login
-  static Future<bool> validateTeacherLogin({
-    required String email,
-    required String password,
-  }) async {
-    if (_database == null) await initDatabase();
-    try {
-      final result = await _database?.query(
-        'teachers',
-        where: 'email = ? AND password = ?',
-        whereArgs: [email, password],
-      );
-      return result != null && result.isNotEmpty;
-    } catch (e) {
-      debugPrint("Error validating teacher login: $e");
-      return false;
-    }
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      child: ElevatedButton.icon(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
+          elevation: 5,
+          backgroundColor: Colors.white, // Changed to white
+          side: const BorderSide(color: Color(0xFF1976D2), width: 2), // Optional border
+        ),
+        icon: Icon(icon, size: 24, color: const Color(0xFF1976D2)), // Icon color updated
+        label: Text(
+          text,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF1976D2), // Text color updated
+          ),
+        ),
+      ),
+    );
   }
 }
+
 
 // Students List Screen
 class StudentsList extends StatelessWidget {
