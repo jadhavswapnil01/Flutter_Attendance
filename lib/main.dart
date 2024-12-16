@@ -3,6 +3,8 @@ import 'package:sqflite/sqflite.dart'; // Add this in pubspec.yaml
 import 'package:path/path.dart'; // For database path
 import 'screens/student_register.dart';
 import 'screens/student_login.dart';
+import 'screens/teacher_register.dart'; // Import Teacher Registration
+import 'screens/teacher_login.dart'; // Import Teacher Login
 import 'widgets/custom_button.dart';
 
 void main() {
@@ -52,6 +54,24 @@ class HomeScreen extends StatelessWidget {
               },
             ),
             CustomButton(
+              text: 'Teacher Register', // Add Teacher Register Button
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => TeacherRegister()),
+                );
+              },
+            ),
+            CustomButton(
+              text: 'Teacher Login', // Add Teacher Login Button
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => TeacherLogin()),
+                );
+              },
+            ),
+            CustomButton(
               text: 'View All Students',
               onPressed: () {
                 Navigator.push(
@@ -76,11 +96,12 @@ class DatabaseHelper {
     if (_database != null) return;
     try {
       String dbPath = await getDatabasesPath();
-      String path = join(dbPath, 'students.db');
+      String path = join(dbPath, 'attendance.db'); // Changed database name
       _database = await openDatabase(
         path,
         version: 1,
         onCreate: (db, version) async {
+          // Create students table
           await db.execute('''
             CREATE TABLE students (
               id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -88,6 +109,16 @@ class DatabaseHelper {
               prn TEXT NOT NULL,
               email TEXT NOT NULL,
               uuid TEXT NOT NULL
+            )
+          ''');
+          // Create teachers table
+          await db.execute('''
+            CREATE TABLE teachers (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              teacher_id TEXT NOT NULL,
+              email TEXT NOT NULL,
+              username TEXT NOT NULL,
+              password TEXT NOT NULL
             )
           ''');
         },
@@ -98,7 +129,7 @@ class DatabaseHelper {
     }
   }
 
-  // Insert student into the database
+  // Save Student
   static Future<void> saveStudent({
     required String username,
     required String prn,
@@ -122,6 +153,30 @@ class DatabaseHelper {
     }
   }
 
+  // Save Teacher
+  static Future<void> saveTeacher({
+    required String teacherId,
+    required String email,
+    required String username,
+    required String password,
+  }) async {
+    if (_database == null) await initDatabase();
+    try {
+      await _database?.insert(
+        'teachers',
+        {
+          'teacher_id': teacherId,
+          'email': email,
+          'username': username,
+          'password': password,
+        },
+      );
+      debugPrint("Teacher $username inserted successfully.");
+    } catch (e) {
+      debugPrint("Error saving teacher: $e");
+    }
+  }
+
   // Fetch all students
   static Future<List<Map<String, dynamic>>> fetchAllStudents() async {
     if (_database == null) await initDatabase();
@@ -130,6 +185,36 @@ class DatabaseHelper {
     } catch (e) {
       debugPrint("Error fetching students: $e");
       return [];
+    }
+  }
+
+  // Fetch all teachers
+  static Future<List<Map<String, dynamic>>> fetchAllTeachers() async {
+    if (_database == null) await initDatabase();
+    try {
+      return await _database!.query('teachers');
+    } catch (e) {
+      debugPrint("Error fetching teachers: $e");
+      return [];
+    }
+  }
+
+  // Validate Teacher Login
+  static Future<bool> validateTeacherLogin({
+    required String email,
+    required String password,
+  }) async {
+    if (_database == null) await initDatabase();
+    try {
+      final result = await _database?.query(
+        'teachers',
+        where: 'email = ? AND password = ?',
+        whereArgs: [email, password],
+      );
+      return result != null && result.isNotEmpty;
+    } catch (e) {
+      debugPrint("Error validating teacher login: $e");
+      return false;
     }
   }
 }

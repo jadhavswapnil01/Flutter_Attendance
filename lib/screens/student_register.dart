@@ -45,8 +45,7 @@ class _StudentRegisterState extends State<StudentRegister> {
       });
 
       final String studentUuid = uuid.v4();
-      final uri = Uri.parse(
-          'https://df94-2402-8100-39cc-ba4b-899a-2eea-5b66-b943.ngrok-free.app/attendance_api/student_register.php');
+      final uri = Uri.parse('https://a64b-2402-8100-3129-1b4a-302c-5e30-9bd5-f3a5.ngrok-free.app/attendance_api/student_register.php');
       var request = http.MultipartRequest('POST', uri)
         ..fields['username'] = _usernameController.text
         ..fields['password'] = _passwordController.text
