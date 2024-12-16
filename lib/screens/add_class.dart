@@ -20,7 +20,7 @@ class _AddClassScreenState extends State<AddClassScreen> {
     });
 
     final response = await http.post(
-      Uri.parse('https://f3a3-2402-3a80-1aa3-6d5-31c6-a80a-9a5-c1a9.ngrok-free.app/attendance_api/add_class.php'),
+      Uri.parse('https://7fa9-2401-4900-57cc-3d4-81cd-9d06-7fc6-9ba.ngrok-free.app/attendance_api/add_class.php'),
       body: {
         'class_name': _classNameController.text,
         'subject_codes': _subjectCodesController.text,

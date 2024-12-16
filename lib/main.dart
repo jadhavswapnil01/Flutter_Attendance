@@ -90,14 +90,14 @@ class HomeScreen extends StatelessWidget {
                   },
                 ),
                 CustomButtonWithIcon(
-                  text: 'Student Login',
-                  icon: Icons.login,
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => StudentLogin()),
-                    );
-                  },
+                text: 'Student Login',
+                icon: Icons.login,
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const StudentLogin()),
+                  );
+                },
                 ),
                 CustomButtonWithIcon(
                   text: 'Add Classes',

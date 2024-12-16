@@ -53,6 +53,30 @@ static Future<void> saveStudent(Map<String, String> studentData) async {
   }
 }
 
+// Fetch the UUID of a specific student by username or ID
+static Future<String?> fetchUuidByUsername(String username) async {
+  if (_database == null) await initDatabase();
+
+  try {
+    final List<Map<String, dynamic>> result = await _database!.query(
+      'students',
+      columns: ['uuid'],
+      where: 'username = ?',
+      whereArgs: [username],
+    );
+
+    if (result.isNotEmpty) {
+      return result.first['uuid'] as String;
+    } else {
+      debugPrint("No UUID found for username $username.");
+      return null;
+    }
+  } catch (e) {
+    debugPrint("Error fetching UUID: $e");
+    return null;
+  }
+}
+
 
   // Fetch all students from the database
   static Future<List<Map<String, dynamic>>> fetchAllStudents() async {
