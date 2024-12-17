@@ -34,36 +34,46 @@ class _StudentLoginState extends State<StudentLogin> {
 
   // Function to handle login
   Future<void> loginUser() async {
-    final username = _usernameController.text;
-    final password = _passwordController.text;
-    final uuid = await getStudentUuid(username);
+  final username = _usernameController.text.trim();
+  final password = _passwordController.text.trim();
+  final uuid = await getStudentUuid(username);
 
-    if (username.isEmpty || password.isEmpty || uuid == null) {
-      setState(() {
-        message = 'All fields are required.';
-      });
-      return;
-    }
+  if (username.isEmpty || password.isEmpty) {
+    setState(() {
+      message = 'Username and password are required.';
+    });
+    return;
+  }
 
-    // Backend API URL
-    const url = 'https://7fa9-2401-4900-57cc-3d4-81cd-9d06-7fc6-9ba.ngrok-free.app/attendance_api/login.php'; // Replace with your XAMPP IP
+  if (uuid == null) {
+    setState(() {
+      message = 'Wrong Username OR you are trying to login another student account.';
+    });
+    return;
+  }
 
-    try {
-      final response = await http.post(
-        Uri.parse(url),
-        body: {
-          'username': username,
-          'password': password,
-          'uuid': uuid,
-        },
-      );
+  // Backend API URL
+  const url =
+      'https://997d-2402-8100-39c6-f96f-e1c5-3c17-bbbb-c7eb.ngrok-free.app/attendance_api/login.php';
 
-      final responseData = jsonDecode(response.body);
+  try {
+    final response = await http.post(
+      Uri.parse(url),
+      body: {
+        'username': username,
+        'password': password,
+        'uuid': uuid,
+      },
+    );
+
+    final responseData = jsonDecode(response.body);
+
+    if (response.statusCode == 200) {
       if (responseData['success'] == true) {
         setState(() {
           message = 'Login Successful!';
         });
-        // Navigate to the next screen
+        // Navigate to dashboard
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -74,19 +84,19 @@ class _StudentLoginState extends State<StudentLogin> {
         setState(() {
           message = responseData['message'];
         });
-        Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => StudentDashboard(uuid: uuid),
-        ),
-      );
       }
-    } catch (e) {
+    } else {
       setState(() {
-        message = 'Login failed. Please try again later.';
+        message = 'Server error. Try again later.';
       });
     }
+  } catch (e) {
+    setState(() {
+      message = 'Unable to connect to the server.';
+    });
   }
+}
+
 
   @override
   Widget build(BuildContext context) {

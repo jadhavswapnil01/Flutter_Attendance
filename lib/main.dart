@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dart:async'; // For animations
-
+// import 'dart:async'; // For animations
 import 'screens/student_register.dart';
 import 'screens/student_login.dart';
 import 'screens/add_class.dart';
@@ -134,7 +133,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                             },
                           ),
                           CustomAnimatedButton(
-                            text: 'Student Login',
+                            text: '  Student Login ',
                             icon: Icons.login,
                             onPressed: () {
                               Navigator.push(
@@ -154,7 +153,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                             },
                           ),
                           CustomAnimatedButton(
-                            text: 'Teacher Login',
+                            text: '  Teacher Login ',
                             icon: Icons.person,
                             onPressed: () {
                               Navigator.push(
@@ -164,7 +163,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                             },
                           ),
                           CustomAnimatedButton(
-                            text: ' Add Classes ',
+                            text: '  Add Classes  ',
                             icon: Icons.class_,
                             onPressed: () {
                               Navigator.push(
@@ -174,7 +173,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                             },
                           ),
                           CustomAnimatedButton(
-                            text: ' Students List ',
+                            text: '  Students List  ',
                             icon: Icons.list_alt,
                             onPressed: () {
                               Navigator.push(
@@ -230,9 +229,9 @@ class _CustomAnimatedButtonState extends State<CustomAnimatedButton> {
       child: Container(
   padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
   decoration: BoxDecoration(
-    color: _isHovered ? Colors.blue : Colors.white,
+    color: _isHovered ? const Color(0xFF673AB7) : Colors.white,
     borderRadius: BorderRadius.circular(8.0),
-    border: Border.all(color: Colors.blue),
+    border: Border.all(color: const Color(0xFF673AB7)),
   ),
   child: Wrap(
     alignment: WrapAlignment.center,
