@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import '../screens/teacher_dashboard.dart';
 
 class TeacherLogin extends StatefulWidget {
   const TeacherLogin({Key? key}) : super(key: key);
@@ -25,7 +26,7 @@ class _TeacherLoginState extends State<TeacherLogin> {
     try {
       final response = await http.post(
         Uri.parse(
-            'https://997d-2402-8100-39c6-f96f-e1c5-3c17-bbbb-c7eb.ngrok-free.app/attendance_api/teacher_login.php'),
+            'https://0d58-106-210-148-154.ngrok-free.app/attendance_api/teacher_login.php'),
         body: {'email': email, 'password': password},
       );
 
@@ -34,8 +35,15 @@ class _TeacherLoginState extends State<TeacherLogin> {
 
         if (responseBody['success'] == true) {
           setState(() {
-            _loginMessage = 'Login Successful: ${responseBody['message']}';
+            _loginMessage = 'Login Successful:';
+            
           });
+          Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => TeacherDashboard(email: email),
+          ),
+        );
           // Navigate to another page if necessary
         } else {
           setState(() {

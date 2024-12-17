@@ -24,7 +24,7 @@ class _TeacherRegisterState extends State<TeacherRegister> {
       });
 
       final uri = Uri.parse(
-          'https://997d-2402-8100-39c6-f96f-e1c5-3c17-bbbb-c7eb.ngrok-free.app/attendance_api/teacher_register.php');
+          'https://0d58-106-210-148-154.ngrok-free.app/attendance_api/teacher_register.php');
       var request = http.MultipartRequest('POST', uri)
         ..fields['username'] = _usernameController.text
         ..fields['password'] = _passwordController.text

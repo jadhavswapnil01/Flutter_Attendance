@@ -21,7 +21,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
   }
 
   Future<void> fetchSubjects() async {
-    const url = 'https://997d-2402-8100-39c6-f96f-e1c5-3c17-bbbb-c7eb.ngrok-free.app/attendance_api/get_subjects.php'; // Replace with your XAMPP IP
+    const url = 'https://0d58-106-210-148-154.ngrok-free.app/attendance_api/get_subjects.php'; // Replace with your XAMPP IP
 
     try {
       final response = await http.post(

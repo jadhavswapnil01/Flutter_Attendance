@@ -10,7 +10,7 @@ class AddClassScreen extends StatefulWidget {
 
 class _AddClassScreenState extends State<AddClassScreen> {
   final TextEditingController _classNameController = TextEditingController();
-  final TextEditingController _subjectCodesController = TextEditingController();
+  final TextEditingController _subjectsController = TextEditingController();
   bool _isLoading = false;
   String? _responseMessage;
 
@@ -20,22 +20,22 @@ class _AddClassScreenState extends State<AddClassScreen> {
     });
 
     final response = await http.post(
-      Uri.parse('https://997d-2402-8100-39c6-f96f-e1c5-3c17-bbbb-c7eb.ngrok-free.app/attendance_api/add_class.php'),
+      Uri.parse('https://0d58-106-210-148-154.ngrok-free.app/attendance_api/add_class.php'),
       body: {
         'class_name': _classNameController.text,
-        'subject_codes': _subjectCodesController.text,
+        'subjects': _subjectsController.text,
       },
     );
 
     setState(() {
       _isLoading = false;
       if (response.statusCode == 200) {
-        _classNameController.text="";
-        _subjectCodesController.text="";
+        _classNameController.text = "";
+        _subjectsController.text = "";
         final responseData = response.body;
         _responseMessage = responseData.contains('"success":true')
-            ? 'Class added successfully!'
-            : 'Failed To Add Class.';
+            ? 'Class and subjects added successfully!'
+            : 'Failed to add class.';
       } else {
         _responseMessage = 'Error: Unable to connect to server.';
       }
@@ -45,7 +45,7 @@ class _AddClassScreenState extends State<AddClassScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Add Class')),
+      appBar: AppBar(title: Text('Add Class and Subjects')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -55,10 +55,11 @@ class _AddClassScreenState extends State<AddClassScreen> {
               decoration: InputDecoration(labelText: 'Class Name'),
             ),
             TextField(
-              controller: _subjectCodesController,
+              controller: _subjectsController,
               decoration: InputDecoration(
-                labelText: 'Subject Codes (comma-separated)',
+                labelText: 'Subjects (Format: (code,name,{types}),(...))',
               ),
+              maxLines: 2,
             ),
             SizedBox(height: 20),
             _isLoading

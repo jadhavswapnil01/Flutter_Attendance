@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:uuid/uuid.dart';
 import '../helpers/database_helper.dart'; // Adjust as per your structure
+import '../screens/student_login.dart';
 
 class StudentRegister extends StatefulWidget {
   const StudentRegister({super.key});
@@ -44,7 +45,7 @@ class _StudentRegisterState extends State<StudentRegister> {
     }
   }
   Future<void> _fetchClasses() async {
-  const url = 'https://997d-2402-8100-39c6-f96f-e1c5-3c17-bbbb-c7eb.ngrok-free.app/attendance_api/get_classes.php';
+  const url = 'https://0d58-106-210-148-154.ngrok-free.app/attendance_api/get_classes.php';
   try {
     final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
@@ -106,6 +107,12 @@ class _StudentRegisterState extends State<StudentRegister> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Student registered successfully!')),
           );
+          Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => StudentLogin(),
+          ),
+        );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Failed to register student.')),
@@ -256,7 +263,8 @@ class _StudentRegisterState extends State<StudentRegister> {
                       ),
                       const SizedBox(height: 20),
                       ElevatedButton(
-                        onPressed: _isLoading ? null : _registerStudent,
+                        
+                        onPressed: _isLoading ? null :  _registerStudent,
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 40, vertical: 15),
