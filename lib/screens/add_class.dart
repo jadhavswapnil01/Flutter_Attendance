@@ -20,7 +20,7 @@ class _AddClassScreenState extends State<AddClassScreen> {
     });
 
     final response = await http.post(
-      Uri.parse('https://0d58-106-210-148-154.ngrok-free.app/attendance_api/add_class.php'),
+      Uri.parse('https://4d91-2401-4900-7fa7-3e0c-d511-a752-fae-e15a.ngrok-free.app/attendance_api/add_class.php'),
       body: {
         'class_name': _classNameController.text,
         'subjects': _subjectsController.text,
@@ -30,12 +30,12 @@ class _AddClassScreenState extends State<AddClassScreen> {
     setState(() {
       _isLoading = false;
       if (response.statusCode == 200) {
-        _classNameController.text = "";
-        _subjectsController.text = "";
+        
         final responseData = response.body;
+        debugPrint('Response Body: ${response.body}');
         _responseMessage = responseData.contains('"success":true')
-            ? 'Class and subjects added successfully!'
-            : 'Failed to add class.';
+            ? 'Class and subjects added successfully!' 
+            : 'Failed to add class.' ;
       } else {
         _responseMessage = 'Error: Unable to connect to server.';
       }

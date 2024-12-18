@@ -45,7 +45,7 @@ class _StudentRegisterState extends State<StudentRegister> {
     }
   }
   Future<void> _fetchClasses() async {
-  const url = 'https://0d58-106-210-148-154.ngrok-free.app/attendance_api/get_classes.php';
+  const url = 'https://4d91-2401-4900-7fa7-3e0c-d511-a752-fae-e15a.ngrok-free.app/attendance_api/get_classes.php';
   try {
     final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
@@ -75,7 +75,7 @@ class _StudentRegisterState extends State<StudentRegister> {
 
       final String studentUuid = uuid.v4();
       final uri = Uri.parse(
-          'https://997d-2402-8100-39c6-f96f-e1c5-3c17-bbbb-c7eb.ngrok-free.app/attendance_api/student_register.php');
+          'https://4d91-2401-4900-7fa7-3e0c-d511-a752-fae-e15a.ngrok-free.app/attendance_api/student_register.php');
       var request = http.MultipartRequest('POST', uri)
         ..fields['username'] = _usernameController.text
         ..fields['password'] = _passwordController.text
