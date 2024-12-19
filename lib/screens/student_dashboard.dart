@@ -1,10 +1,13 @@
-import 'package:flutter/material.dart';
 import 'dart:convert';
+import 'dart:math'; // For generating random colors
 import 'package:http/http.dart' as http;
+import 'package:flutter/material.dart';
 import 'constants.dart';
+import 'view_attendance.dart';
 
 class StudentDashboard extends StatefulWidget {
-  final String uuid; // Pass UUID from login
+  final String uuid;
+
   const StudentDashboard({Key? key, required this.uuid}) : super(key: key);
 
   @override
@@ -27,8 +30,7 @@ class _StudentDashboardState extends State<StudentDashboard>
   }
 
   Future<void> fetchStudentData() async {
-    const url =
-        '${APIConstants.baseUrl}/attendance_api/get_student_dashboard_data.php'; // Replace with your actual API endpoint
+    const url = '${APIConstants.baseUrl}/attendance_api/get_student_dashboard_data.php';
 
     try {
       final response = await http.post(
@@ -41,23 +43,20 @@ class _StudentDashboardState extends State<StudentDashboard>
       if (responseData['success'] == true) {
         List subjects = responseData['subjects'];
 
-        // Organize subjects by lec_type
         setState(() {
-  // Cast subjects to List<Map<String, dynamic>> for proper type matching
-  final List<Map<String, dynamic>> formattedSubjects = List<Map<String, dynamic>>.from(subjects);
+          final List<Map<String, dynamic>> formattedSubjects =
+              List<Map<String, dynamic>>.from(subjects);
 
-  // Filter the subjects by lecture type
-  theorySubjects = formattedSubjects
-      .where((subject) => subject['lec_type'].contains('Theory'))
-      .toList();
-  tutorialSubjects = formattedSubjects
-      .where((subject) => subject['lec_type'].contains('Tutorial'))
-      .toList();
-  labSubjects = formattedSubjects
-      .where((subject) => subject['lec_type'].contains('Lab'))
-      .toList();
-});
-
+          theorySubjects = formattedSubjects
+              .where((subject) => subject['lec_type'].contains('Theory'))
+              .toList();
+          tutorialSubjects = formattedSubjects
+              .where((subject) => subject['lec_type'].contains('Tutorial'))
+              .toList();
+          labSubjects = formattedSubjects
+              .where((subject) => subject['lec_type'].contains('Lab'))
+              .toList();
+        });
       } else {
         setState(() {
           message = responseData['message'];
@@ -70,40 +69,75 @@ class _StudentDashboardState extends State<StudentDashboard>
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Student Dashboard'),
-        backgroundColor: const Color(0xFF1976D2),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'Theory'),
-            Tab(text: 'Tutorial'),
-            Tab(text: 'Lab'),
-          ],
-        ),
-      ),
-      body: message.isNotEmpty
-          ? Center(
-              child: Text(
-                message,
-                style: const TextStyle(fontSize: 16, color: Colors.red),
-              ),
-            )
-          : TabBarView(
-              controller: _tabController,
-              children: [
-                _buildSubjectList(theorySubjects),
-                _buildSubjectList(tutorialSubjects),
-                _buildSubjectList(labSubjects),
-              ],
-            ),
+  Color _getRandomLightColor() {
+    final random = Random();
+    return Color.fromARGB(
+      255,
+      200 + random.nextInt(55),
+      200 + random.nextInt(55),
+      200 + random.nextInt(55),
     );
   }
 
-  Widget _buildSubjectList(List<Map<String, dynamic>> subjects) {
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    backgroundColor: Colors.grey[100],
+    appBar: PreferredSize(
+      preferredSize: const Size.fromHeight(120), // Slightly increased height for a better visual.
+      child: ClipRRect(
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(32), // Increased the radius for a more pronounced curve.
+          bottomRight: Radius.circular(32),
+        ),
+        child: AppBar(
+  elevation: 10,
+  title: const Text(
+    'Student Dashboard',
+    style: TextStyle(fontSize: 22), // Slightly larger title font.
+  ),
+  centerTitle: true,
+  backgroundColor: const Color(0xFF1976D2),
+  bottom: PreferredSize(
+    preferredSize: const Size.fromHeight(70), // Adjusted for larger tabs.
+    child: TabBar(
+      controller: _tabController,
+      indicator: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15), // Slightly more rounded rectangle for tabs.
+      ),
+      labelColor: Colors.black,
+      unselectedLabelColor: Colors.white70,
+      labelStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold), // Larger and bold text for tabs.
+      unselectedLabelStyle: const TextStyle(fontSize: 16), // Slightly smaller for unselected tabs.
+      tabs: const [
+        Tab(text: 'Theory'),
+        Tab(text: 'Tutorial'),
+        Tab(text: 'Lab'),
+      ],
+    ),
+  ),
+),
+      ),
+    ),
+    body: message.isNotEmpty
+        ? Center(
+            child: Text(
+              message,
+              style: const TextStyle(fontSize: 16, color: Colors.red),
+            ),
+          )
+        : TabBarView(
+            controller: _tabController,
+            children: [
+              _buildSubjectList(theorySubjects, 'Theory'),
+              _buildSubjectList(tutorialSubjects, 'Tutorial'),
+              _buildSubjectList(labSubjects, 'Lab'),
+            ],
+          ),
+  );
+}
+  Widget _buildSubjectList(List<Map<String, dynamic>> subjects, String lecType) {
     if (subjects.isEmpty) {
       return const Center(
         child: Text(
@@ -117,17 +151,73 @@ class _StudentDashboardState extends State<StudentDashboard>
       itemCount: subjects.length,
       itemBuilder: (context, index) {
         final subject = subjects[index];
+        final subjectName = subject['subject_name'];
+         final subjectCode = subject['subject_code'];
+
         return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+          padding: const EdgeInsets.symmetric(vertical: 11.0, horizontal: 16.0),
           child: ElevatedButton(
-            onPressed: () {
-              debugPrint('Subject Selected: ${subject['subject_name']}');
-              // Add navigation or actions as needed
-            },
-            child: Text(subject['subject_name']),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _getRandomLightColor(),
+              padding: const EdgeInsets.all(16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              elevation: 5,
+            ),
+            onPressed: () async {
+          // print(index + 1);
+          // print(lecType);
+          // print(subject);
+
+          final url = '${APIConstants.baseUrl}/attendance_api/process_button_click.php';
+
+          try {
+            final response = await http.post(
+              Uri.parse(url),
+              body: jsonEncode({
+                'uuid': widget.uuid,
+                'button_id': index + 1,
+                'lec_type': lecType, // Pass lecture type
+              }),
+              headers: {'Content-Type': 'application/json'},
+            );
+
+            final responseData = jsonDecode(response.body);
+
+            if (responseData['success'] == true) {
+              // Pass subjectName and subjectCode to ViewAttendance
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ViewAttendance(
+                    className: responseData['subject']['class_name'],
+                    uuid: widget.uuid,
+                    subjectName: subjectName, // Pass the extracted subject name
+                    subjectCode: subjectCode, // Pass the extracted subject code
+                    lectureType: lecType, // Use the lecture type passed
+                  ),
+                ),
+              );
+            } else {
+              setState(() {
+                message = responseData['message'] ?? 'An error occurred.';
+              });
+            }
+          } catch (e) {
+            setState(() {
+              message = 'Network error: $e';
+            });
+          }
+        },
+            child: Text(
+              subjectName,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
           ),
         );
       },
     );
   }
 }
+

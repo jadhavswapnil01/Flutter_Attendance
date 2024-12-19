@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'constants.dart';
+import 'teacher_login.dart';
 
 class TeacherRegister extends StatefulWidget {
   const TeacherRegister({Key? key}) : super(key: key);
@@ -42,6 +43,13 @@ class _TeacherRegisterState extends State<TeacherRegister> {
             SnackBar(content: Text(json['message'])),
           );
           _clearForm();
+          Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => TeacherLogin(),
+          ),
+          );
+
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

@@ -1,7 +1,6 @@
 <?php
 header('Content-Type: application/json');
 
-// Database connection
 $host = 'localhost';
 $dbname = 'attendancesystem';
 $username = 'root';
@@ -15,7 +14,6 @@ try {
     exit();
 }
 
-// Get the raw POST data
 $data = json_decode(file_get_contents('php://input'), true);
 
 if (!isset($data['uuid'])) {
@@ -26,7 +24,7 @@ if (!isset($data['uuid'])) {
 $uuid = $data['uuid'];
 
 try {
-    // Step 1: Fetch student's class_id using uuid
+    // Fetch student's class_id using uuid
     $stmt = $pdo->prepare("SELECT class_id FROM students WHERE uuid = :uuid");
     $stmt->execute(['uuid' => $uuid]);
     $student = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -38,22 +36,10 @@ try {
 
     $class_id = $student['class_id'];
 
-    // Step 2: Fetch subject codes for the class
-    $stmt = $pdo->prepare("SELECT subject_codes FROM classes WHERE id = :class_id");
+    // Fetch subjects linked to the class
+    $stmt = $pdo->prepare("SELECT subject_code, subject_name, lec_type FROM subjects 
+                           WHERE FIND_IN_SET(subject_code, (SELECT subject_codes FROM classes WHERE id = :class_id))");
     $stmt->execute(['class_id' => $class_id]);
-    $class = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    if (!$class) {
-        echo json_encode(['success' => false, 'message' => 'Class not found.']);
-        exit();
-    }
-
-    $subject_codes = explode(',', $class['subject_codes']);
-
-    // Step 3: Fetch subject details for the subject codes
-    $placeholders = implode(',', array_fill(0, count($subject_codes), '?'));
-    $stmt = $pdo->prepare("SELECT subject_name, lec_type FROM subjects WHERE subject_code IN ($placeholders)");
-    $stmt->execute($subject_codes);
     $subjects = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     if (!$subjects) {
@@ -61,13 +47,14 @@ try {
         exit();
     }
 
-    // Step 4: Format the response
+    // Add button IDs
     $formattedSubjects = [];
-    foreach ($subjects as $subject) {
-        $lectureTypes = explode(',', $subject['lec_type']);
+    foreach ($subjects as $index => $subject) {
         $formattedSubjects[] = [
+            'button_id' => $index + 1, // Example ID assignment
             'subject_name' => $subject['subject_name'],
-            'lec_type' => $lectureTypes
+            'subject_code' => $subject['subject_code'],
+            'lec_type' => explode(',', $subject['lec_type']),
         ];
     }
 
@@ -76,3 +63,4 @@ try {
 } catch (PDOException $e) {
     echo json_encode(['success' => false, 'message' => 'Query failed: ' . $e->getMessage()]);
 }
+?>
