@@ -1,0 +1,101 @@
+create database attendancesystem;
+
+use attendancesystem;
+
+CREATE TABLE `teachers` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `teacher_id` varchar(50) NOT NULL,
+  `email` varchar(100) NOT NULL,
+  `username` varchar(50) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `location_lat` double DEFAULT NULL,
+  `location_long` double DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `teacher_id` (`teacher_id`),
+  UNIQUE KEY `email` (`email`)
+);
+
+
+
+CREATE TABLE `classes` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `class_name` varchar(100) NOT NULL,
+  `subject_codes` text NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `class_name` (`class_name`)
+);
+
+
+
+CREATE TABLE `subjects` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `subject_code` varchar(100) NOT NULL,
+  `subject_name` varchar(100) NOT NULL,
+  `lec_type` text NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `subject_code` (`subject_code`)
+);
+
+
+
+CREATE TABLE `students` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `username` varchar(255) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `prn_number` varchar(50) NOT NULL,
+  `college_email` varchar(255) NOT NULL,
+  `uuid` char(36) NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `face_image` varchar(255) DEFAULT NULL,
+  `class_id` varchar(100) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uuid` (`uuid`),
+  UNIQUE KEY `username` (`username`)
+);
+
+
+
+CREATE TABLE `classrooms` (
+  `classroom_id` int NOT NULL AUTO_INCREMENT,
+  `class_name` varchar(100) NOT NULL,
+  `subject_code` varchar(50) NOT NULL,
+  `subject_name` varchar(100) NOT NULL,
+  `lecture_type` varchar(50) NOT NULL,
+  `classroom_number` varchar(50) DEFAULT NULL,
+  `teacher_email` varchar(100) DEFAULT NULL,
+  `teacher_latitude` double DEFAULT NULL,
+  `teacher_longitude` double DEFAULT NULL,
+  `online_attendance_status` enum('active','inactive') DEFAULT 'inactive',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`classroom_id`),
+  KEY `fk123` (`class_name`),
+  KEY `fk1234` (`subject_code`),
+  KEY `fk12345` (`teacher_email`),
+  CONSTRAINT `fk123` FOREIGN KEY (`class_name`) REFERENCES `classes` (`class_name`),
+  CONSTRAINT `fk1234` FOREIGN KEY (`subject_code`) REFERENCES `subjects` (`subject_code`),
+  CONSTRAINT `fk12345` FOREIGN KEY (`teacher_email`) REFERENCES `teachers` (`email`)
+);
+
+
+
+
+CREATE TABLE `attendance` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `classroom_id` int NOT NULL,
+  `class_name` varchar(100) NOT NULL,
+  `subject_code` varchar(50) NOT NULL,
+  `subject_name` varchar(100) NOT NULL,
+  `lecture_type` varchar(50) NOT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `attendies_id_comma_sep` text,
+  `ended_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `fk9483` (`class_name`),
+  KEY `fk9484` (`subject_code`),
+  CONSTRAINT `fk9483` FOREIGN KEY (`class_name`) REFERENCES `classes` (`class_name`),
+  CONSTRAINT `fk9484` FOREIGN KEY (`subject_code`) REFERENCES `subjects` (`subject_code`)
+);
+
+
