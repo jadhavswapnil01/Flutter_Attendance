@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'constants.dart';
 
 class AddClassScreen extends StatefulWidget {
   const AddClassScreen({super.key});
@@ -20,7 +21,7 @@ class _AddClassScreenState extends State<AddClassScreen> {
     });
 
     final response = await http.post(
-      Uri.parse('https://4d91-2401-4900-7fa7-3e0c-d511-a752-fae-e15a.ngrok-free.app/attendance_api/add_class.php'),
+      Uri.parse('${APIConstants.baseUrl}/attendance_api/add_class.php'),
       body: {
         'class_name': _classNameController.text,
         'subjects': _subjectsController.text,

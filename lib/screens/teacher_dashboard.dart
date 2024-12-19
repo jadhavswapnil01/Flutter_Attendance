@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
 import 'package:http/http.dart' as http;
+import 'constants.dart';
 
 class TeacherDashboard extends StatefulWidget {
   final String email;
@@ -39,7 +40,7 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
 
   Future<void> fetchClasses() async {
     final response = await http.get(Uri.parse(
-        'https://48f1-2402-8100-39c0-323e-6c46-c565-cd6f-c83.ngrok-free.app/attendance_api/get_classes.php'));
+        '${APIConstants.baseUrl}/attendance_api/get_classes.php'));
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
@@ -55,7 +56,7 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
 
   Future<void> fetchSubjectNames(String classId) async {
     final response = await http.get(Uri.parse(
-        'https://48f1-2402-8100-39c0-323e-6c46-c565-cd6f-c83.ngrok-free.app/attendance_api/get_subjectnames_teacher.php?class_id=$classId'));
+        '${APIConstants.baseUrl}/attendance_api/get_subjectnames_teacher.php?class_id=$classId'));
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
@@ -73,7 +74,7 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
 
   Future<void> fetchLectureTypes(String subjectId) async {
     final response = await http.get(Uri.parse(
-        'https://48f1-2402-8100-39c0-323e-6c46-c565-cd6f-c83.ngrok-free.app/attendance_api/get_lecture_types.php?subject_id=$subjectId'));
+        '${APIConstants.baseUrl}/attendance_api/get_lecture_types.php?subject_id=$subjectId'));
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
@@ -88,7 +89,7 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
 
 Future<void> fetchSubjectCode(String subjectId) async {
   final response = await http.get(Uri.parse(
-        'https://48f1-2402-8100-39c0-323e-6c46-c565-cd6f-c83.ngrok-free.app/attendance_api/get_subjectcodes_teacher.php?subject_id=$subjectId'));
+        '${APIConstants.baseUrl}/attendance_api/get_subjectcodes_teacher.php?subject_id=$subjectId'));
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
@@ -144,7 +145,7 @@ Future<void> fetchSubjectCode(String subjectId) async {
   // Make API call to create the classroom
   final response = await http.post(
     Uri.parse(
-        'https://48f1-2402-8100-39c0-323e-6c46-c565-cd6f-c83.ngrok-free.app/attendance_api/create_classroom.php'),
+        '${APIConstants.baseUrl}/attendance_api/create_classroom.php'),
     body: {
       'email': widget.email,
       'class_name': selectedClassName,
@@ -358,7 +359,7 @@ _message = data['message'];
       .firstWhere((classItem) => classItem['id'].toString() == selectedClassId)['class_name'];
 
     final response = await http.post(
-      Uri.parse('https://48f1-2402-8100-39c0-323e-6c46-c565-cd6f-c83.ngrok-free.app/attendance_api/update_attendance_status.php'),
+      Uri.parse('${APIConstants.baseUrl}/attendance_api/update_attendance_status.php'),
       body: {
         'class_name': selectedClassName,
         'subject_code': subjectCode,

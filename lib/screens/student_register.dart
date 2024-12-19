@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:uuid/uuid.dart';
 import '../helpers/database_helper.dart'; // Adjust as per your structure
 import '../screens/student_login.dart';
+import 'constants.dart';
 
 class StudentRegister extends StatefulWidget {
   const StudentRegister({super.key});
@@ -45,7 +46,7 @@ class _StudentRegisterState extends State<StudentRegister> {
     }
   }
   Future<void> _fetchClasses() async {
-  const url = 'https://4d91-2401-4900-7fa7-3e0c-d511-a752-fae-e15a.ngrok-free.app/attendance_api/get_classes.php';
+  const url = '${APIConstants.baseUrl}/attendance_api/get_classes.php';
   try {
     final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
@@ -75,7 +76,7 @@ class _StudentRegisterState extends State<StudentRegister> {
 
       final String studentUuid = uuid.v4();
       final uri = Uri.parse(
-          'https://4d91-2401-4900-7fa7-3e0c-d511-a752-fae-e15a.ngrok-free.app/attendance_api/student_register.php');
+          '${APIConstants.baseUrl}/attendance_api/student_register.php');
       var request = http.MultipartRequest('POST', uri)
         ..fields['username'] = _usernameController.text
         ..fields['password'] = _passwordController.text

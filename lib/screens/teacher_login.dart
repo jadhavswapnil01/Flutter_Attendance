@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../screens/teacher_dashboard.dart';
+import 'constants.dart';
 
 class TeacherLogin extends StatefulWidget {
   const TeacherLogin({Key? key}) : super(key: key);
@@ -26,7 +27,7 @@ class _TeacherLoginState extends State<TeacherLogin> {
     try {
       final response = await http.post(
         Uri.parse(
-            'https://48f1-2402-8100-39c0-323e-6c46-c565-cd6f-c83.ngrok-free.app/attendance_api/teacher_login.php'),
+            '${APIConstants.baseUrl}/attendance_api/teacher_login.php'),
         body: {'email': email, 'password': password},
       );
 

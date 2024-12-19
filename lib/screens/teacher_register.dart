@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'constants.dart';
 
 class TeacherRegister extends StatefulWidget {
   const TeacherRegister({Key? key}) : super(key: key);
@@ -24,7 +25,7 @@ class _TeacherRegisterState extends State<TeacherRegister> {
       });
 
       final uri = Uri.parse(
-          'https://4d91-2401-4900-7fa7-3e0c-d511-a752-fae-e15a.ngrok-free.app/attendance_api/teacher_register.php');
+          '${APIConstants.baseUrl}/attendance_api/teacher_register.php');
       var request = http.MultipartRequest('POST', uri)
         ..fields['username'] = _usernameController.text
         ..fields['password'] = _passwordController.text

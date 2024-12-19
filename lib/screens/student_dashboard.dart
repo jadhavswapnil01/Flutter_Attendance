@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'constants.dart';
 
 class StudentDashboard extends StatefulWidget {
   final String uuid; // Pass UUID from login
@@ -27,7 +28,7 @@ class _StudentDashboardState extends State<StudentDashboard>
 
   Future<void> fetchStudentData() async {
     const url =
-        'https://4d91-2401-4900-7fa7-3e0c-d511-a752-fae-e15a.ngrok-free.app/attendance_api/get_student_dashboard_data.php'; // Replace with your actual API endpoint
+        '${APIConstants.baseUrl}/attendance_api/get_student_dashboard_data.php'; // Replace with your actual API endpoint
 
     try {
       final response = await http.post(
