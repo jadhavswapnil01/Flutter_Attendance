@@ -25,18 +25,18 @@ class ViewAttendance extends StatefulWidget {
 
 class _ViewAttendanceState extends State<ViewAttendance> {
   bool isAttendanceActive = false;
+  bool isLoading = true;
   late int classroomId;
+  List<dynamic> attendanceInfo = [];
 
   @override
   void initState() {
     super.initState();
     fetchClassroomStatus();
+    fetchAttendanceInfo();
   }
 
   Future<void> fetchClassroomStatus() async {
-    print(widget.className);
-    print(widget.subjectCode);
-    print(widget.lectureType);
     final response = await http.post(
       Uri.parse('${APIConstants.baseUrl}/attendance_api/getClassroomStatus.php'),
       body: {
@@ -53,10 +53,41 @@ class _ViewAttendanceState extends State<ViewAttendance> {
         classroomId = data['classroom_id'];
       });
     } else {
-      // Handle errors
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to fetch classroom status')),
+      showError('Failed to fetch classroom status');
+    }
+  }
+
+  Future<void> fetchAttendanceInfo() async {
+    try {
+      final response = await http.post(
+        Uri.parse('${APIConstants.baseUrl}/attendance_api/getAttendanceInfo.php'),
+        body: {
+          'uuid': widget.uuid,
+          'class_name': widget.className,
+          'subject_code': widget.subjectCode,
+          'lecture_type': widget.lectureType,
+        },
       );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        if (data['success']) {
+          setState(() {
+            attendanceInfo = data['attendance'];
+          });
+        } else {
+          showError(data['message'] ?? 'Failed to fetch attendance info');
+        }
+      } else {
+        showError('Failed to fetch attendance info (HTTP ${response.statusCode})');
+      }
+    } catch (e) {
+      showError('An error occurred: $e');
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
@@ -73,74 +104,129 @@ class _ViewAttendanceState extends State<ViewAttendance> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Attendance marked successfully!')),
       );
+
+      // Fetch updated attendance info after successful marking
+      fetchAttendanceInfo();
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to mark attendance')),
-      );
+      showError('Failed to mark attendance');
     }
+  }
+
+  void showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final lastAttendance = attendanceInfo.isNotEmpty ? attendanceInfo.last : null;
+    final isLastAttendancePresent =
+        lastAttendance != null && lastAttendance['status'] == 'P';
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Attendance Details'),
         backgroundColor: const Color(0xFF1976D2),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              elevation: 4,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Subject: ${widget.subjectCode} - ${widget.subjectName}',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+      body: isLoading
+          ? const Center(
+              child: CircularProgressIndicator(),
+            )
+          : Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 4,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Subject: ${widget.subjectCode} - ${widget.subjectName}',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Class: ${widget.className}',
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Lecture Type: ${widget.lectureType}',
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Class: ${widget.className}',
-                      style: const TextStyle(fontSize: 16),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Lecture Type: ${widget.lectureType}',
-                      style: const TextStyle(fontSize: 16),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            const Divider(),
-            const Text(
-              'Attendance Info:',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            Expanded(
-              child: ListView(
-                children: const [
-                  Text('Date: 2024-12-01 - P'),
-                  Text('Date: 2024-12-02 - A'),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Attendance Info:',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: attendanceInfo.isNotEmpty
+                        ? ListView.builder(
+                            itemCount: attendanceInfo.length,
+                            itemBuilder: (context, index) {
+                              final attendance = attendanceInfo[index];
+                              final isPresent = attendance['status'] == 'P';
+                              final isLastCard = index == attendanceInfo.length - 1;
+
+                              return Card(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                elevation: 3,
+                                margin: const EdgeInsets.symmetric(vertical: 8),
+                                child: ListTile(
+                                  leading: CircleAvatar(
+                                    backgroundColor:
+                                        isPresent ? Colors.green : Colors.red,
+                                    child: Text(
+                                      attendance['status'],
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  title: Text(
+                                    'Date: ${attendance['date']}',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  subtitle: isLastCard && isAttendanceActive
+                                      ? const Text(
+                                          'Online attendance active for this record.',
+                                          style: TextStyle(
+                                            color: Colors.blue,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        )
+                                      : null,
+                                ),
+                              );
+                            },
+                          )
+                        : const Center(child: Text('No attendance records found.')),
+                  ),
                 ],
               ),
             ),
-          ],
-        ),
-      ),
-      floatingActionButton: isAttendanceActive
+      floatingActionButton: isAttendanceActive && !isLastAttendancePresent
           ? FloatingActionButton.extended(
               onPressed: markAttendance,
               label: const Text(
