@@ -8,7 +8,7 @@ class TeacherRegister extends StatefulWidget {
   const TeacherRegister({Key? key}) : super(key: key);
 
   @override
-  State<TeacherRegister> createState() => _TeacherRegisterState();
+  _TeacherRegisterState createState() => _TeacherRegisterState();
 }
 
 class _TeacherRegisterState extends State<TeacherRegister> {
@@ -25,8 +25,7 @@ class _TeacherRegisterState extends State<TeacherRegister> {
         _isLoading = true;
       });
 
-      final uri = Uri.parse(
-          '${APIConstants.baseUrl}/attendance_api/teacher_register.php');
+      final uri = Uri.parse('${APIConstants.baseUrl}/attendance_api/teacher_register.php');
       var request = http.MultipartRequest('POST', uri)
         ..fields['username'] = _usernameController.text
         ..fields['password'] = _passwordController.text
@@ -44,17 +43,12 @@ class _TeacherRegisterState extends State<TeacherRegister> {
           );
           _clearForm();
           Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => TeacherLogin(),
-          ),
+            context,
+            MaterialPageRoute(builder: (_) => TeacherLogin()),
           );
-
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content:
-                    Text(json['message'] ?? 'Failed to register teacher.')),
+            SnackBar(content: Text(json['message'] ?? 'Failed to register teacher.')),
           );
         }
       } catch (e) {
@@ -79,91 +73,103 @@ class _TeacherRegisterState extends State<TeacherRegister> {
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor = Color(0xFF673AB7); // Green theme color
-    final secondaryColor = Color.fromARGB(255, 255, 255, 255); // Darker green for accents
-
     return Scaffold(
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 2,
+        centerTitle: true,
         title: const Text(
-          'Teacher Registration',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          'Teacher Register',
+          style: TextStyle(
+            color: Color(0xFF673AB7),
+            fontWeight: FontWeight.bold,
+          ),
         ),
-        backgroundColor: primaryColor,
+        iconTheme: const IconThemeData(color: Color(0xFF673AB7)),
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Register a New Teacher',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 30),
-                _buildInputField(
-                  controller: _teacherIdController,
-                  labelText: 'Teacher ID',
-                  hintText: 'Enter Teacher ID',
-                ),
-                const SizedBox(height: 15),
-                _buildInputField(
-                  controller: _usernameController,
-                  labelText: 'Username',
-                  hintText: 'Enter Username',
-                ),
-                const SizedBox(height: 15),
-                _buildInputField(
-                  controller: _emailController,
-                  labelText: 'Email',
-                  hintText: 'Enter Email',
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Enter an email';
-                    }
-                    if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
-                        .hasMatch(value)) {
-                      return 'Enter a valid email';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 15),
-                _buildInputField(
-                  controller: _passwordController,
-                  labelText: 'Password',
-                  hintText: 'Enter Password',
-                  obscureText: true,
-                ),
-                const SizedBox(height: 30),
-                Center(
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _registerTeacher,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 40, vertical: 15),
-                      backgroundColor: secondaryColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+      body: Center(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const Text(
+                    'Get Started',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF673AB7),
                     ),
-                    child: _isLoading
-                        ? const CircularProgressIndicator(
-                            color: Colors.white,
-                          )
-                        : const Text(
-                            'Register Teacher',
-                            style: TextStyle(fontSize: 18),
-                          ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Create a new account',
+                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 30),
+                  _buildInputField(
+                    controller: _teacherIdController,
+                    labelText: 'Teacher ID',
+                    icon: Icons.badge_outlined,
+                  ),
+                  const SizedBox(height: 20),
+                  _buildInputField(
+                    controller: _usernameController,
+                    labelText: 'Username',
+                    icon: Icons.person_outline,
+                  ),
+                  const SizedBox(height: 20),
+                  _buildInputField(
+                    controller: _emailController,
+                    labelText: 'Email',
+                    icon: Icons.email_outlined,
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter an email';
+                      }
+                      if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+                          .hasMatch(value)) {
+                        return 'Enter a valid email';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  _buildInputField(
+                    controller: _passwordController,
+                    labelText: 'Password',
+                    icon: Icons.lock_outline,
+                    obscureText: true,
+                  ),
+                  const SizedBox(height: 30),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _registerTeacher,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        backgroundColor: const Color(0xFF673AB7),
+                      ),
+                      child: _isLoading
+                          ? const CircularProgressIndicator(
+                              color: Colors.white,
+                            )
+                          : const Text(
+                              'Register',
+                              style: TextStyle(fontSize: 22, color: Colors.white),
+                            ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -174,7 +180,7 @@ class _TeacherRegisterState extends State<TeacherRegister> {
   Widget _buildInputField({
     required TextEditingController controller,
     required String labelText,
-    String? hintText,
+    required IconData icon,
     TextInputType keyboardType = TextInputType.text,
     bool obscureText = false,
     String? Function(String?)? validator,
@@ -183,14 +189,9 @@ class _TeacherRegisterState extends State<TeacherRegister> {
       controller: controller,
       decoration: InputDecoration(
         labelText: labelText,
-        hintText: hintText,
-        labelStyle: const TextStyle(color: Colors.black),
+        prefixIcon: Icon(icon),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderSide: const BorderSide(color: Color(0xFF673AB7), width: 2.0),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(10),
         ),
       ),
       keyboardType: keyboardType,

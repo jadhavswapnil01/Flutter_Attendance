@@ -229,8 +229,6 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
             (value) {
               setState(() {
                 selectedSubjectNameId = value;
-                fetchLectureTypes(value!);
-                fetchSubjectCode(value);
               });
             },
           ),
@@ -262,24 +260,11 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
           const SizedBox(height: 20),
           ElevatedButton(
             onPressed: createClassroom,
-            style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16,horizontal:25),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    backgroundColor: const Color(0xFF673AB7),
-                  ),
-            
             child: _isLoading
                 ? const CircularProgressIndicator(color: Colors.white)
-                : const Text('Create',
-                style: TextStyle(fontSize: 16, color: Colors.white),
-                ),
-                
+                : const Text('Create'),
           ),
-          
         ],
-        
       ),
     );
   }
@@ -296,34 +281,18 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
           const SizedBox(height: 20),
           classDetails.isNotEmpty
               ? Card(
-                elevation: 4,
-                margin: const EdgeInsets.symmetric(vertical: 10),
-                child: Padding(
-                      padding: const EdgeInsets.all(16.0),
                   child: ListTile(
-                    
                     title: Text('Class: ${classDetails['Class Name']}'),
-                    subtitle:Text('Class: ${classDetails['Subject Name']}'),
-                    trailing: Text('Lecture: ${classDetails['Lecture Type']}',
-                    style: TextStyle(fontSize: 13, color: const Color.fromARGB(255, 0, 0, 0)),),
+                    subtitle: Text('Lecture: ${classDetails['Lecture Type']}'),
                   ),
                 )
-              )
               : const Text('No class created yet.'),
           const SizedBox(height: 20),
           ElevatedButton(
             onPressed: toggleOnlineAttendance,
-            style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16,horizontal:25),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    backgroundColor: const Color(0xFF673AB7),
-                  ),
             child: Text(_isAttendanceActive
                 ? 'Deactivate Online Attendance'
-                : 'Activate Online Attendance',
-                style: TextStyle(fontSize: 18, color: Colors.white)),
+                : 'Activate Online Attendance'),
           ),
         ],
       ),
