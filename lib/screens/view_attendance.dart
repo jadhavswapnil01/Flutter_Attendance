@@ -132,7 +132,7 @@ class _ViewAttendanceState extends State<ViewAttendance> {
 
   Future<void> markAttendanceWithRSSI(String ssid) async {
     final averageDistance = await calculateAverageDistance(ssid);
-    if (averageDistance <= 0.1) {
+    if (averageDistance <= 7) {
       markAttendance();
     } else {
       showError('You are too far from the access point.');
