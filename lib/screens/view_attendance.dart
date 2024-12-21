@@ -1,7 +1,11 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'constants.dart';
+import 'dart:async';
+import 'package:flutter/services.dart';
+
 
 class ViewAttendance extends StatefulWidget {
   final String? uuid;
@@ -24,6 +28,7 @@ class ViewAttendance extends StatefulWidget {
 }
 
 class _ViewAttendanceState extends State<ViewAttendance> {
+  static const platform = MethodChannel('com.example.untitled4/rssi');
   bool isAttendanceActive = false;
   bool isLoading = true;
   late int classroomId;
@@ -57,6 +62,40 @@ class _ViewAttendanceState extends State<ViewAttendance> {
     }
   }
 
+  Future<double> calculateAverageDistance(String ssid) async {
+    List<int> rssiValues = [];
+    try {
+      for (int i = 0; i < 10; i++) {
+        final rssi = await platform.invokeMethod<int>('getRSSI', {'ssid': ssid});
+        if (rssi != null) {
+          rssiValues.add(rssi);
+        }
+        await Future.delayed(const Duration(milliseconds: 250));
+      }
+
+      // Convert RSSI to distance (simplified path loss model example)
+      double distanceSum = 0;
+      for (var rssi in rssiValues) {
+        double distance = calculateDistanceFromRSSI(rssi);
+        distanceSum += distance;
+      }
+
+      return distanceSum / rssiValues.length;
+    } catch (e) {
+      showError('Error fetching RSSI values: $e');
+      return double.infinity;
+    }
+  }
+
+  double calculateDistanceFromRSSI(int rssi) {
+  // Example calculation (adjust according to your requirements)
+  const double txPower = -59; // Reference RSSI value at 1 meter (modify if needed)
+  if (rssi == 0) {
+    return double.infinity; // Signal lost or not measurable
+  }
+  return pow(10, (txPower - rssi) / (10 * 2)).toDouble();
+}
+
   Future<void> fetchAttendanceInfo() async {
     try {
       final response = await http.post(
@@ -88,6 +127,15 @@ class _ViewAttendanceState extends State<ViewAttendance> {
       setState(() {
         isLoading = false;
       });
+    }
+  }
+
+  Future<void> markAttendanceWithRSSI(String ssid) async {
+    final averageDistance = await calculateAverageDistance(ssid);
+    if (averageDistance <= 0.1) {
+      markAttendance();
+    } else {
+      showError('You are too far from the access point.');
     }
   }
 
@@ -228,7 +276,10 @@ class _ViewAttendanceState extends State<ViewAttendance> {
             ),
       floatingActionButton: isAttendanceActive && !isLastAttendancePresent
           ? FloatingActionButton.extended(
-              onPressed: markAttendance,
+              onPressed: () async {
+                final ssid = 'motoedge50fusion_8483'; // Fetch from the database
+                await markAttendanceWithRSSI(ssid);
+              },
               label: const Text(
                 'Mark Attendance',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),

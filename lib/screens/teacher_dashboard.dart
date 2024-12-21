@@ -1,8 +1,10 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
 import 'package:http/http.dart' as http;
 import 'constants.dart';
+import 'package:wifi_iot/wifi_iot.dart';
 
 class TeacherDashboard extends StatefulWidget {
   final String email;
@@ -35,6 +37,22 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
     super.initState();
     fetchClasses();
   }
+
+
+Future<String?> getHotspotSSID() async {
+  try {
+    String? ssid = await WiFiForIoTPlugin.getWiFiAPSSID();
+    if (ssid != null) {
+      print("Hotspot SSID: $ssid");
+      return ssid;
+    } else {
+      print("Hotspot is not enabled or SSID is unavailable.");
+    }
+  } catch (e) {
+    print("Error getting Hotspot SSID: $e");
+  }
+  return null;
+}
 
   Future<void> fetchClasses() async {
     final response = await http.get(Uri.parse(
@@ -164,12 +182,43 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
       setState(() {
         _isAttendanceActive = !_isAttendanceActive;
       });
+      if (_isAttendanceActive) {
+      // Activate Hotspot
+     
+        await activateHotspot();
+      
+    } else {
+      // Deactivate Hotspot (Android only, as iOS can't be deactivated programmatically)
+      if (Platform.isAndroid) {
+        await WiFiForIoTPlugin.setWiFiAPEnabled(false);
+      }
+    }
     }
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(data['message'])),
     );
   }
+
+Future<void> activateHotspot() async {
+
+  bool isHotspotEnabled = await WiFiForIoTPlugin.isWiFiAPEnabled();
+  if (!isHotspotEnabled) {
+    bool success = await WiFiForIoTPlugin.setWiFiAPEnabled(true);
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Hotspot enabled.and will be disabled when online attendance toggled deactive")),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Failed to enable hotspot. Please enable it manually.")),
+      );
+    }
+  }
+
+  // Provide manual configuration instructions
+
+}
 
   @override
   Widget build(BuildContext context) {
