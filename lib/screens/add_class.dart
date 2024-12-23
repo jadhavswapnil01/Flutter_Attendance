@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'constants.dart';
+import 'package:untitled4/screens/background_scaffold.dart';
 
 class AddClassScreen extends StatefulWidget {
   const AddClassScreen({super.key});
@@ -45,7 +46,7 @@ class _AddClassScreenState extends State<AddClassScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return BackgroundScaffold(
       appBar: AppBar(title: Text('Add Class and Subjects')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

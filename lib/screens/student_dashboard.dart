@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'constants.dart';
 import 'view_attendance.dart';
+import 'package:untitled4/screens/background_scaffold.dart';
 
 class StudentDashboard extends StatefulWidget {
   final String uuid;
@@ -81,16 +82,9 @@ class _StudentDashboardState extends State<StudentDashboard>
 
 @override
 Widget build(BuildContext context) {
-  return Scaffold(
-    backgroundColor: Colors.grey[100],
-    appBar: PreferredSize(
-      preferredSize: const Size.fromHeight(120), // Slightly increased height for a better visual.
-      child: ClipRRect(
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(32), // Increased the radius for a more pronounced curve.
-          bottomRight: Radius.circular(32),
-        ),
-        child: AppBar(
+  return BackgroundScaffold(
+  
+appBar: AppBar(
   elevation: 10,
   title: const Text(
     'Student Dashboard',
@@ -118,8 +112,6 @@ Widget build(BuildContext context) {
     ),
   ),
 ),
-      ),
-    ),
     body: message.isNotEmpty
         ? Center(
             child: Text(

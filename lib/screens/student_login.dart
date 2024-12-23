@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import '../helpers/database_helper.dart';
 import './student_dashboard.dart';
 import 'constants.dart';
+import 'package:untitled4/screens/background_scaffold.dart';
 import 'student_register.dart';
 
 class StudentLogin extends StatefulWidget {
@@ -101,8 +102,7 @@ class _StudentLoginState extends State<StudentLogin> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[100],
+    return BackgroundScaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 2,

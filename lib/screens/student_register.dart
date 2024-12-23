@@ -7,6 +7,7 @@ import 'package:uuid/uuid.dart';
 import '../helpers/database_helper.dart'; // Adjust as per your structure
 import '../screens/student_login.dart';
 import 'constants.dart';
+import 'package:untitled4/screens/background_scaffold.dart';
 
 class StudentRegister extends StatefulWidget {
   const StudentRegister({super.key});
@@ -134,8 +135,7 @@ class _StudentRegisterState extends State<StudentRegister> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[100],
+    return BackgroundScaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 2,

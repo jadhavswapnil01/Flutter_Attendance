@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../screens/teacher_dashboard.dart';
 import 'constants.dart';
+import 'package:untitled4/screens/background_scaffold.dart';
+
 
 class TeacherLogin extends StatefulWidget {
   const TeacherLogin({Key? key}) : super(key: key);
@@ -66,8 +68,7 @@ class _TeacherLoginState extends State<TeacherLogin> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[100],
+    return BackgroundScaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 2,
@@ -163,7 +164,7 @@ class _TeacherLoginState extends State<TeacherLogin> {
                       ),
                       child: _isLoading
                           ? const CircularProgressIndicator(
-                              color: Colors.white,
+                              color: Color.fromARGB(255, 111, 29, 173),
                             )
                           : const Text(
                               'Login',

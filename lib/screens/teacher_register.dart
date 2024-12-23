@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'constants.dart';
 import 'teacher_login.dart';
+import 'package:untitled4/screens/background_scaffold.dart';
+
 
 class TeacherRegister extends StatefulWidget {
   const TeacherRegister({Key? key}) : super(key: key);
@@ -73,8 +75,8 @@ class _TeacherRegisterState extends State<TeacherRegister> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[100],
+    return BackgroundScaffold(
+    
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 2,

@@ -5,6 +5,8 @@ import 'screens/student_register.dart';
 import 'screens/teacher_login.dart';
 import 'screens/teacher_register.dart';
 import 'helpers/database_helper.dart';
+import 'package:untitled4/screens/background_scaffold.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -33,7 +35,7 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return BackgroundScaffold(
       appBar: AppBar(
         title: const Text(
           'Attendance App',
@@ -51,13 +53,13 @@ class HomeScreen extends StatelessWidget {
         ),
       ),
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFFEDE7F6), Color(0xFFD1C4E9)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
+        // decoration: const BoxDecoration(
+        //   gradient: LinearGradient(
+        //     //colors: [Color(0xFFEDE7F6), Color(0xFFD1C4E9)],
+        //     begin: Alignment.topCenter,
+        //     end: Alignment.bottomCenter,
+        //   ),
+        // ),
         child: Center(
           child: SingleChildScrollView(
             child: Padding(
@@ -130,11 +132,12 @@ class HomeScreen extends StatelessWidget {
                 child: Container(
                   height: 60,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: const Color.fromARGB(0, 184, 89, 213),
+                    border: Border.all(color: const Color.fromARGB(255, 255, 255, 255)),
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: const Color.fromARGB(255, 255, 250, 250).withOpacity(0.1),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
@@ -170,10 +173,10 @@ class StudentsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return BackgroundScaffold(
       appBar: AppBar(
         title: const Text('Stored Students'),
-        backgroundColor: const Color(0xFF1976D2),
+        backgroundColor: const Color(0xFF673AB7),
       ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: DatabaseHelper.fetchAllStudents(),

@@ -5,6 +5,8 @@ import 'package:location/location.dart';
 import 'package:http/http.dart' as http;
 import 'constants.dart';
 import 'package:wifi_iot/wifi_iot.dart';
+import 'package:untitled4/screens/background_scaffold.dart';
+
 
 class TeacherDashboard extends StatefulWidget {
   final String email;
@@ -222,7 +224,7 @@ Future<void> activateHotspot() async {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return BackgroundScaffold(
       appBar: AppBar(
         title: const Text('Teacher Dashboard'),
       ),
