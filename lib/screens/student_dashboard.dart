@@ -85,29 +85,33 @@ Widget build(BuildContext context) {
   return BackgroundScaffold(
   
 appBar: AppBar(
-  elevation: 10,
+  elevation: 0,
+  
   title: const Text(
     'Student Dashboard',
-    style: TextStyle(fontSize: 22), // Slightly larger title font.
+    style: TextStyle(fontSize: 22, color: Color(0xFF673AB7), fontWeight: FontWeight.bold),
+     // Slightly larger title font.
   ),
-  centerTitle: true,
-  backgroundColor: const Color(0xFF1976D2),
+   iconTheme: const IconThemeData(color: Color(0xFF673AB7)),
+  backgroundColor: Colors.transparent,
   bottom: PreferredSize(
     preferredSize: const Size.fromHeight(70), // Adjusted for larger tabs.
     child: TabBar(
       controller: _tabController,
+      
       indicator: BoxDecoration(
-        color: Colors.white,
+        color: Color(0xFF673AB7),
+        border: Border.all(),
         borderRadius: BorderRadius.circular(15), // Slightly more rounded rectangle for tabs.
       ),
-      labelColor: Colors.black,
-      unselectedLabelColor: Colors.white70,
+      labelColor: Colors.white,
+      unselectedLabelColor: Colors.black,
       labelStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold), // Larger and bold text for tabs.
       unselectedLabelStyle: const TextStyle(fontSize: 16), // Slightly smaller for unselected tabs.
       tabs: const [
-        Tab(text: 'Theory'),
-        Tab(text: 'Tutorial'),
-        Tab(text: 'Lab'),
+        Tab(text: ' Theory '),
+        Tab(text: ' Tutorial '),
+        Tab(text: '  Lab  '),
       ],
     ),
   ),

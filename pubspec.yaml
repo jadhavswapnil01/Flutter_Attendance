@@ -43,6 +43,7 @@ dependencies:
   location: ^7.0.1
   wifi_iot: ^0.3.19+1
   network_info_plus: ^6.1.2
+  animated_text_kit: ^4.2.1
 
 
 dev_dependencies:

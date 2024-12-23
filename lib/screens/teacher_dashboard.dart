@@ -226,7 +226,16 @@ Future<void> activateHotspot() async {
   Widget build(BuildContext context) {
     return BackgroundScaffold(
       appBar: AppBar(
-        title: const Text('Teacher Dashboard'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: const Text(
+          'Teacher Dashboard',
+          style: TextStyle(
+            color: Color(0xFF673AB7),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        iconTheme: const IconThemeData(color: Color(0xFF673AB7)),
       ),
       body: PageView(
         controller: _pageController,
@@ -244,6 +253,7 @@ Future<void> activateHotspot() async {
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
+          const SizedBox(height: 80),
           const Text(
             'Create Classroom',
             style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
@@ -340,6 +350,7 @@ Future<void> activateHotspot() async {
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
+          const SizedBox(height: 80),
           const Text(
             'Manage Attendance',
             style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),

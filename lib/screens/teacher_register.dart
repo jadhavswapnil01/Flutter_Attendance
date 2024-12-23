@@ -78,9 +78,8 @@ class _TeacherRegisterState extends State<TeacherRegister> {
     return BackgroundScaffold(
     
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 2,
-        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         title: const Text(
           'Teacher Register',
           style: TextStyle(
@@ -99,6 +98,7 @@ class _TeacherRegisterState extends State<TeacherRegister> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  const SizedBox(height: 40),
                   const Text(
                     'Get Started',
                     style: TextStyle(

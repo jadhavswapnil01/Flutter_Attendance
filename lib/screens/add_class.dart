@@ -47,11 +47,24 @@ class _AddClassScreenState extends State<AddClassScreen> {
   @override
   Widget build(BuildContext context) {
     return BackgroundScaffold(
-      appBar: AppBar(title: Text('Add Class and Subjects')),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: const Text(
+          'Add Class and Subject',
+          style: TextStyle(
+            color: Color(0xFF673AB7),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        iconTheme: const IconThemeData(color: Color(0xFF673AB7)),
+      ),
       body: Padding(
+        
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
+            SizedBox(height: 100),
             TextField(
               controller: _classNameController,
               decoration: InputDecoration(labelText: 'Class Name'),

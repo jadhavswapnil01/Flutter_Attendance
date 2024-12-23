@@ -104,9 +104,9 @@ class _StudentLoginState extends State<StudentLogin> {
   Widget build(BuildContext context) {
     return BackgroundScaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 2,
-        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        //centerTitle: true,
         title: const Text(
           'Student Login',
           style: TextStyle(
@@ -122,6 +122,7 @@ class _StudentLoginState extends State<StudentLogin> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              const SizedBox(height: 80),
               const Text(
                 'Welcome Back!',
                 style: TextStyle(
@@ -133,7 +134,7 @@ class _StudentLoginState extends State<StudentLogin> {
               const SizedBox(height: 8),
               const Text(
                 'Login to your account',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
+                style: TextStyle(fontSize: 16, color: Color.fromARGB(255, 2, 2, 2)),
               ),
               const SizedBox(height: 30),
               _buildInputField(
@@ -159,6 +160,7 @@ class _StudentLoginState extends State<StudentLogin> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                     backgroundColor: const Color(0xFF673AB7),
+                  
                   ),
                   child: _isLoading
                       ? Row(
