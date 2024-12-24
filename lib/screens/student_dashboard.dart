@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'constants.dart';
 import 'view_attendance.dart';
+import 'package:untitled4/screens/background_scaffold.dart';
 
 class StudentDashboard extends StatefulWidget {
   final String uuid;
@@ -83,45 +84,40 @@ class _StudentDashboardState extends State<StudentDashboard>
 
 @override
 Widget build(BuildContext context) {
-  return Scaffold(
-    backgroundColor: Colors.grey[100],
-    appBar: PreferredSize(
-      preferredSize: const Size.fromHeight(120), // Slightly increased height for a better visual.
-      child: ClipRRect(
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(32), // Increased the radius for a more pronounced curve.
-          bottomRight: Radius.circular(32),
-        ),
-        child: AppBar(
-  elevation: 10,
+  return BackgroundScaffold(
+  
+appBar: AppBar(
+  elevation: 0,
+  
   title: const Text(
     'Student Dashboard',
-    style: TextStyle(fontSize: 22), // Slightly larger title font.
+    style: TextStyle(fontSize: 22, color: Color(0xFF673AB7), fontWeight: FontWeight.bold),
+     // Slightly larger title font.
   ),
-  centerTitle: true,
-  backgroundColor: const Color(0xFF1976D2),
+   iconTheme: const IconThemeData(color: Color(0xFF673AB7)),
+  backgroundColor: Colors.transparent,
   bottom: PreferredSize(
     preferredSize: const Size.fromHeight(70), // Adjusted for larger tabs.
     child: TabBar(
       controller: _tabController,
+      
       indicator: BoxDecoration(
-        color: Colors.white,
+        color: Color(0xFF673AB7),
+        border: Border.all(),
         borderRadius: BorderRadius.circular(15), // Slightly more rounded rectangle for tabs.
       ),
-      labelColor: Colors.black,
-      unselectedLabelColor: Colors.white70,
+      labelColor: Colors.white,
+      unselectedLabelColor: Colors.black,
       labelStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold), // Larger and bold text for tabs.
       unselectedLabelStyle: const TextStyle(fontSize: 16), // Slightly smaller for unselected tabs.
       tabs: const [
-        Tab(text: 'Theory'),
-        Tab(text: 'Tutorial'),
-        Tab(text: 'Lab'),
+        Tab(text: ' Theory '),
+        Tab(text: ' Tutorial '),
+        Tab(text: '  Lab  '),
       ],
     ),
   ),
 ),
-      ),
-    ),
     body: message.isNotEmpty
         ? Center(
             child: Text(

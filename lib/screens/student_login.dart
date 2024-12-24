@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import '../helpers/database_helper.dart';
 import './student_dashboard.dart';
 import 'constants.dart';
+import 'package:untitled4/screens/background_scaffold.dart';
 import 'student_register.dart';
 
 class StudentLogin extends StatefulWidget {
@@ -101,12 +102,11 @@ class _StudentLoginState extends State<StudentLogin> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[100],
+    return BackgroundScaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 2,
-        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        //centerTitle: true,
         title: const Text(
           'Student Login',
           style: TextStyle(
@@ -122,6 +122,7 @@ class _StudentLoginState extends State<StudentLogin> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              const SizedBox(height: 80),
               const Text(
                 'Welcome Back!',
                 style: TextStyle(
@@ -133,7 +134,7 @@ class _StudentLoginState extends State<StudentLogin> {
               const SizedBox(height: 8),
               const Text(
                 'Login to your account',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
+                style: TextStyle(fontSize: 16, color: Color.fromARGB(255, 2, 2, 2)),
               ),
               const SizedBox(height: 30),
               _buildInputField(
@@ -159,6 +160,7 @@ class _StudentLoginState extends State<StudentLogin> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                     backgroundColor: const Color(0xFF673AB7),
+                  
                   ),
                   child: _isLoading
                       ? Row(

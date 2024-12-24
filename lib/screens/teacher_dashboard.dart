@@ -5,6 +5,7 @@ import 'package:location/location.dart';
 import 'package:http/http.dart' as http;
 import 'constants.dart';
 import 'package:wifi_iot/wifi_iot.dart';
+<<<<<<< HEAD
 // import 'package:flutter/services.dart';
 
 
@@ -23,6 +24,10 @@ import 'package:wifi_iot/wifi_iot.dart';
 //     }
 //   }
 // }
+=======
+import 'package:untitled4/screens/background_scaffold.dart';
+
+>>>>>>> c9590b39c7da4cb54bdf34f95c1d1ab40a96eea9
 
 class TeacherDashboard extends StatefulWidget {
   final String email;
@@ -269,9 +274,18 @@ Future<void> updateHotspotSSIDInDatabase(String ssid) async {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return BackgroundScaffold(
       appBar: AppBar(
-        title: const Text('Teacher Dashboard'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: const Text(
+          'Teacher Dashboard',
+          style: TextStyle(
+            color: Color(0xFF673AB7),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        iconTheme: const IconThemeData(color: Color(0xFF673AB7)),
       ),
       body: PageView(
         controller: _pageController,
@@ -289,6 +303,7 @@ Future<void> updateHotspotSSIDInDatabase(String ssid) async {
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
+          const SizedBox(height: 80),
           const Text(
             'Create Classroom',
             style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
@@ -401,6 +416,7 @@ Future<void> updateHotspotSSIDInDatabase(String ssid) async {
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
+          const SizedBox(height: 80),
           const Text(
             'Manage Attendance',
             style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),

@@ -7,6 +7,7 @@ import 'package:uuid/uuid.dart';
 import '../helpers/database_helper.dart'; // Adjust as per your structure
 import '../screens/student_login.dart';
 import 'constants.dart';
+import 'package:untitled4/screens/background_scaffold.dart';
 
 class StudentRegister extends StatefulWidget {
   const StudentRegister({super.key});
@@ -35,25 +36,24 @@ class _StudentRegisterState extends State<StudentRegister> {
   }
 
   Future<void> _fetchClasses() async {
-  const url = '${APIConstants.baseUrl}/attendance_api/get_classes.php';
-  try {
-    final response = await http.get(Uri.parse(url));
-    if (response.statusCode == 200) {
-      if (mounted) {
-        setState(() {
-          _classes = List<Map<String, dynamic>>.from(jsonDecode(response.body));
-        });
+    const url = '${APIConstants.baseUrl}/attendance_api/get_classes.php';
+    try {
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        if (mounted) {
+          setState(() {
+            _classes = List<Map<String, dynamic>>.from(jsonDecode(response.body));
+          });
+        }
+      } else {
+        throw Exception('Failed to load classes');
       }
-    } else {
-      throw Exception('Failed to load classes');
-    }
-  } catch (e) {
-    if (mounted) {
-      debugPrint('Error fetching classes: $e');
+    } catch (e) {
+      if (mounted) {
+        debugPrint('Error fetching classes: $e');
+      }
     }
   }
-}
-
 
   Future<void> _pickImage() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
@@ -134,12 +134,10 @@ class _StudentRegisterState extends State<StudentRegister> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[100],
+    return BackgroundScaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 2,
-        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         title: const Text(
           'Student Register',
           style: TextStyle(
@@ -158,6 +156,7 @@ class _StudentRegisterState extends State<StudentRegister> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  const SizedBox(height: 75), // Pushes "Get Started" text down
                   const Text(
                     'Get Started',
                     style: TextStyle(
@@ -166,7 +165,7 @@ class _StudentRegisterState extends State<StudentRegister> {
                       color: Color(0xFF673AB7),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 3),
                   const Text(
                     'Create a new account',
                     style: TextStyle(fontSize: 16, color: Colors.grey),
@@ -190,16 +189,16 @@ class _StudentRegisterState extends State<StudentRegister> {
                     icon: Icons.email_outlined,
                     keyboardType: TextInputType.emailAddress,
                     validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter an email';
-                    }
-                    // Corrected regex for email validation
-                    if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
-                        .hasMatch(value)) {
-                      return 'Enter a valid email';
-                    }
-                    return null;
-                  },
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter an email';
+                      }
+                      // Corrected regex for email validation
+                      if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+                          .hasMatch(value)) {
+                        return 'Enter a valid email';
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 20),
                   _buildInputField(
@@ -253,11 +252,13 @@ class _StudentRegisterState extends State<StudentRegister> {
                       : ElevatedButton(
                           onPressed: _pickImage,
                           style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 13,horizontal:10),
+                            padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 10),
                             backgroundColor: const Color.fromARGB(255, 107, 60, 187),
                           ),
-                          child: const Text('Pick Image',
-                          style: TextStyle(fontSize: 17, color: Colors.white),),
+                          child: const Text(
+                            'Pick Image',
+                            style: TextStyle(fontSize: 17, color: Colors.white),
+                          ),
                         ),
                   const SizedBox(height: 20),
                   SizedBox(

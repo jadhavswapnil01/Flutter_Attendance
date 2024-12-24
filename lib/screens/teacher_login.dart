@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../screens/teacher_dashboard.dart';
 import 'constants.dart';
+import 'package:untitled4/screens/background_scaffold.dart';
+
 
 class TeacherLogin extends StatefulWidget {
   const TeacherLogin({Key? key}) : super(key: key);
@@ -66,12 +68,10 @@ class _TeacherLoginState extends State<TeacherLogin> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[100],
+    return BackgroundScaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 2,
-        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         title: const Text(
           'Teacher Login',
           style: TextStyle(
@@ -90,6 +90,7 @@ class _TeacherLoginState extends State<TeacherLogin> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  const SizedBox(height: 80),
                   const Text(
                     'Welcome Back',
                     style: TextStyle(
@@ -101,9 +102,10 @@ class _TeacherLoginState extends State<TeacherLogin> {
                   const SizedBox(height: 8),
                   const Text(
                     'Login to continue',
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                    style: TextStyle(fontSize: 16, color: Color.fromARGB(255, 0, 0, 0)),
+                    
                   ),
-                  const SizedBox(height: 140),
+                  const SizedBox(height: 40),
                   TextFormField(
                     controller: _emailController,
                     decoration: InputDecoration(
@@ -163,7 +165,7 @@ class _TeacherLoginState extends State<TeacherLogin> {
                       ),
                       child: _isLoading
                           ? const CircularProgressIndicator(
-                              color: Colors.white,
+                              color: Color.fromARGB(255, 111, 29, 173),
                             )
                           : const Text(
                               'Login',
