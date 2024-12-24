@@ -5,7 +5,6 @@ import 'package:location/location.dart';
 import 'package:http/http.dart' as http;
 import 'constants.dart';
 import 'package:wifi_iot/wifi_iot.dart';
-<<<<<<< HEAD
 // import 'package:flutter/services.dart';
 
 
@@ -24,10 +23,8 @@ import 'package:wifi_iot/wifi_iot.dart';
 //     }
 //   }
 // }
-=======
 import 'package:untitled4/screens/background_scaffold.dart';
 
->>>>>>> c9590b39c7da4cb54bdf34f95c1d1ab40a96eea9
 
 class TeacherDashboard extends StatefulWidget {
   final String email;
@@ -62,28 +59,28 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
     super.initState();
     fetchClasses();
     checkHotspotStatus();
-    fetchHotspotSSID();
-    // hotspotSSID =  fetchSSIDFromDatabase();
+    // fetchHotspotSSID();
+    fetchSSIDFromDatabase();
     
   }
 
-Future<void> fetchHotspotSSID() async {
-  try {
-    // String? ssid = await HotspotUtils.getHotspotSSID();
-    // if (ssid == null || ssid.isEmpty) {
-    //   // If SSID is null or empty, fetch from the database
-    //   ssid = await fetchSSIDFromDatabase();
-    // }
-    String? ssid;
-    setState(() {
-      hotspotSSID = ssid;
-    });
-  } catch (e) {
-    setState(() {
-      hotspotSSID = null; // Prompt user to enter SSID
-    });
-  }
-}
+// Future<void> fetchHotspotSSID() async {
+//   try {
+//     // String? ssid = await HotspotUtils.getHotspotSSID();
+//     // if (ssid == null || ssid.isEmpty) {
+//     //   // If SSID is null or empty, fetch from the database
+//     //   ssid = await fetchSSIDFromDatabase();
+//     // }
+//     String? ssid;
+//     setState(() {
+//       hotspotSSID = ssid;
+//     });
+//   } catch (e) {
+//     setState(() {
+//       hotspotSSID = null; // Prompt user to enter SSID
+//     });
+//   }
+// }
 
 Future<String?> fetchSSIDFromDatabase() async {
   final response = await http.post(
@@ -94,6 +91,7 @@ Future<String?> fetchSSIDFromDatabase() async {
   if (response.statusCode == 200) {
     final data = json.decode(response.body);
     if (data['success'] && data['ssid'] != null) {
+      _ssidController.text =hotspotSSID = data['ssid'];
       return data['ssid']; // Return the SSID from the database
     }
   }

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ffi';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -41,28 +42,33 @@ class _ViewAttendanceState extends State<ViewAttendance> {
     super.initState();
     fetchClassroomStatus();
     fetchAttendanceInfo();
-    fetchSSID(); 
+    // fetchSSID(); 
   }
 
-   Future<void> fetchSSID() async {
-    final response = await http.get(Uri.parse('${APIConstants.baseUrl}/fetch_ssid_student.php?classroom_id=${widget.classroomId}'));
+   Future<void> fetchSSID(int classroomId) async {
+    // print(classroomId);
+    // fetchClassroomStatus();
+    // print(widget.classroomId);
+    // print(classroomId);
+    final response = await http.get(Uri.parse('${APIConstants.baseUrl}/attendance_api/fetch_ssid_student.php?classroom_id=$classroomId'));
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
-      if (data['success']) {
+      // if (data['success']) {
         setState(() {
           ssid = data['ssid'];
+          // print(ssid);
         });
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(data['message'] ?? 'Failed to fetch SSID.')),
-        );
+      // } else {
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   SnackBar(content: Text(data['message'] ?? 'Failed to fetch SSID.')),
+        // );
       }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Server error. Please try again later.')),
-      );
-    }
+    // } else {
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     SnackBar(content: Text('Server error. Please try again later.')),
+    //   );
+    // }
   }
 
   Future<void> fetchClassroomStatus() async {
@@ -80,6 +86,8 @@ class _ViewAttendanceState extends State<ViewAttendance> {
       setState(() {
         isAttendanceActive = data['online_attendance_status'] == 'active';
         classroomId = data['classroom_id'];
+        // print(classroomId);
+        fetchSSID(classroomId);
       });
     } else {
       showError('Failed to fetch classroom status');
@@ -306,6 +314,7 @@ class _ViewAttendanceState extends State<ViewAttendance> {
       floatingActionButton: isAttendanceActive && !isLastAttendancePresent
           ? FloatingActionButton.extended(
               onPressed: () async {
+                // print(ssid);
                 final passingSsid = ssid;
                 if (passingSsid!.isEmpty) {
                 showError('SSID not provided.');

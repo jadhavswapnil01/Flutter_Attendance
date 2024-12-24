@@ -22,7 +22,7 @@ class BackgroundScaffold extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: AssetImage('assets/images/z.jpeg'),
+                image: AssetImage('assets/images/IMG_20241224_153215.png'),
                 fit: BoxFit.cover,
               ),
             ),

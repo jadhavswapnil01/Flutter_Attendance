@@ -1,4 +1,5 @@
 <?php
+header('Content-Type: application/json');
 include("connect.php");
 $conn = dbconnection();
 
@@ -11,9 +12,10 @@ if (!$classroom_id) {
 
 try {
     // Fetch teacher email based on classroom_id
-    $query = $db->prepare("SELECT teacher_email FROM classrooms WHERE classroom_id = ?");
-    $query->execute([$classroom_id]);
-    $result = $query->fetch(PDO::FETCH_ASSOC);
+    $query = $conn->prepare("SELECT teacher_email FROM classrooms WHERE classroom_id = ?");
+    $query->bind_param("s", $classroom_id);
+    $query->execute();
+    $result = $query->get_result()->fetch_assoc();
 
     if (!$result) {
         echo json_encode(['success' => false, 'message' => 'Classroom not found.']);
@@ -23,9 +25,10 @@ try {
     $teacher_email = $result['teacher_email'];
 
     // Fetch SSID based on teacher email
-    $query = $db->prepare("SELECT ssid FROM teachers WHERE email = ?");
-    $query->execute([$teacher_email]);
-    $ssidResult = $query->fetch(PDO::FETCH_ASSOC);
+    $query = $conn->prepare("SELECT ssid FROM teachers WHERE email = ?");
+    $query->bind_param("s", $teacher_email);
+    $query->execute();
+    $ssidResult = $query->get_result()->fetch_assoc();
 
     if (!$ssidResult) {
         echo json_encode(['success' => false, 'message' => 'SSID not found for the teacher.']);
@@ -33,7 +36,7 @@ try {
     }
 
     echo json_encode(['success' => true, 'ssid' => $ssidResult['ssid']]);
-} catch (PDOException $e) {
+} catch (mysqli_sql_exception $e) {
     echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
 }
 ?>
