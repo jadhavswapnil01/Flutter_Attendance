@@ -169,6 +169,10 @@ class _ViewAttendanceState extends State<ViewAttendance> {
 
   Future<void> markAttendanceWithRSSI(String ssid) async {
     final averageDistance = await calculateAverageDistance(ssid);
+    if (averageDistance == double.infinity || averageDistance == 0) {
+        showError('Invalid RSSI or distance detected. Ensure Wi-Fi is enabled.');
+        return;
+    }
     if (averageDistance <= 1.7) {
       markAttendance();
     } else {
@@ -187,7 +191,7 @@ class _ViewAttendanceState extends State<ViewAttendance> {
 
     if (response.statusCode == 200) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Attendance marked successfully!')),
+        const SnackBar(content: Text('Attendance marked successfully! ')),
       );
 
       // Fetch updated attendance info after successful marking

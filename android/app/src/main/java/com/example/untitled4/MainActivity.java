@@ -83,40 +83,56 @@ public class MainActivity extends FlutterActivity {
 
     private int getRSSI(String ssid) {
         WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        if (wifiManager != null) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // Android 13+
-                if (checkSelfPermission(android.Manifest.permission.NEARBY_WIFI_DEVICES) != PackageManager.PERMISSION_GRANTED) {
-                    Log.e("ERROR", "NEARBY_WIFI_DEVICES permission not granted.");
-                    return Integer.MIN_VALUE;
-                }
-            } else {
-                if (checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    Log.e("ERROR", "ACCESS_FINE_LOCATION permission not granted.");
-                    return Integer.MIN_VALUE;
-                }
+    
+        if (wifiManager == null) {
+            Log.e("ERROR", "WifiManager is not available.");
+            return Integer.MIN_VALUE;
+        }
+    
+        // Check if Wi-Fi is enabled
+        int wifiState = wifiManager.getWifiState();
+        if (wifiState != WifiManager.WIFI_STATE_ENABLED) {
+            Log.e("ERROR", "Wi-Fi is not enabled. Current state: " + wifiState);
+            return Integer.MIN_VALUE;
+        }
+    
+        // Check permissions
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // Android 13+
+            if (checkSelfPermission(android.Manifest.permission.NEARBY_WIFI_DEVICES) != PackageManager.PERMISSION_GRANTED) {
+                Log.e("ERROR", "NEARBY_WIFI_DEVICES permission not granted.");
+                return Integer.MIN_VALUE;
             }
-    
-            List<ScanResult> scanResults = wifiManager.getScanResults();
-            for (ScanResult scanResult : scanResults) {
-                String currentSSID;
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // Android 13+
-                    currentSSID = scanResult.getWifiSsid() != null ? scanResult.getWifiSsid().toString() : null;
-                    if (currentSSID != null && currentSSID.startsWith("\"") && currentSSID.endsWith("\"")) {
-                        currentSSID = currentSSID.substring(1, currentSSID.length() - 1); // Remove quotes
-                    }
-                } else {
-                    currentSSID = scanResult.SSID;
-                }
-    
-                Log.d("DEBUG", "Checking SSID: " + currentSSID);
-                if (currentSSID != null && currentSSID.equals(ssid)) {
-                    return scanResult.level; // Return the RSSI value
-                }
+        } else {
+            if (checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                Log.e("ERROR", "ACCESS_FINE_LOCATION permission not granted.");
+                return Integer.MIN_VALUE;
             }
         }
+    
+        // Start Wi-Fi scan and fetch results
+        wifiManager.startScan();
+        List<ScanResult> scanResults = wifiManager.getScanResults();
+        for (ScanResult scanResult : scanResults) {
+            String currentSSID;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // Android 13+
+                currentSSID = scanResult.getWifiSsid() != null ? scanResult.getWifiSsid().toString() : null;
+                if (currentSSID != null && currentSSID.startsWith("\"") && currentSSID.endsWith("\"")) {
+                    currentSSID = currentSSID.substring(1, currentSSID.length() - 1); // Remove quotes
+                }
+            } else {
+                currentSSID = scanResult.SSID;
+            }
+    
+            Log.d("DEBUG", "Checking SSID: " + currentSSID);
+            if (currentSSID != null && currentSSID.equals(ssid)) {
+                return scanResult.level; // Return the RSSI value
+            }
+        }
+    
         Log.e("ERROR", "SSID not found: " + ssid);
         return Integer.MIN_VALUE; // RSSI not available
     }
+    
     
 
     private String getHotspotSSID() {
