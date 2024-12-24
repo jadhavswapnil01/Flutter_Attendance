@@ -13,6 +13,7 @@ class ViewAttendance extends StatefulWidget {
   final String? subjectCode;
   final String? className;
   final String? lectureType;
+  final String? classroomId=null;
 
   const ViewAttendance({
     Key? key,
@@ -31,6 +32,7 @@ class _ViewAttendanceState extends State<ViewAttendance> {
   static const platform = MethodChannel('com.example.untitled4/rssi');
   bool isAttendanceActive = false;
   bool isLoading = true;
+   String? ssid;
   late int classroomId;
   List<dynamic> attendanceInfo = [];
 
@@ -39,6 +41,28 @@ class _ViewAttendanceState extends State<ViewAttendance> {
     super.initState();
     fetchClassroomStatus();
     fetchAttendanceInfo();
+    fetchSSID(); 
+  }
+
+   Future<void> fetchSSID() async {
+    final response = await http.get(Uri.parse('${APIConstants.baseUrl}/fetch_ssid_student.php?classroom_id=${widget.classroomId}'));
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      if (data['success']) {
+        setState(() {
+          ssid = data['ssid'];
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(data['message'] ?? 'Failed to fetch SSID.')),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Server error. Please try again later.')),
+      );
+    }
   }
 
   Future<void> fetchClassroomStatus() async {
@@ -65,14 +89,19 @@ class _ViewAttendanceState extends State<ViewAttendance> {
   Future<double> calculateAverageDistance(String ssid) async {
     List<int> rssiValues = [];
     try {
-      for (int i = 0; i < 10; i++) {
-        final rssi = await platform.invokeMethod<int>('getRSSI', {'ssid': ssid});
+      for (int i = 0; i < 4; i++) {
+        try{final rssi = await platform.invokeMethod<int>('getRSSI', {'ssid': ssid});
+
+        
         if (rssi != null) {
           rssiValues.add(rssi);
         }
-        await Future.delayed(const Duration(milliseconds: 250));
+        await Future.delayed(const Duration(milliseconds: 1000));
+      }on PlatformException catch (e) {
+      showError('Failed to fetch RSSI: ${e.message}');
       }
-
+      }
+    
       // Convert RSSI to distance (simplified path loss model example)
       double distanceSum = 0;
       for (var rssi in rssiValues) {
@@ -132,10 +161,10 @@ class _ViewAttendanceState extends State<ViewAttendance> {
 
   Future<void> markAttendanceWithRSSI(String ssid) async {
     final averageDistance = await calculateAverageDistance(ssid);
-    if (averageDistance <= 7) {
+    if (averageDistance <= 1.7) {
       markAttendance();
     } else {
-      showError('You are too far from the access point.');
+      showError('You are too away from the Teacher');
     }
   }
 
@@ -277,8 +306,12 @@ class _ViewAttendanceState extends State<ViewAttendance> {
       floatingActionButton: isAttendanceActive && !isLastAttendancePresent
           ? FloatingActionButton.extended(
               onPressed: () async {
-                final ssid = 'motoedge50fusion_8483'; // Fetch from the database
-                await markAttendanceWithRSSI(ssid);
+                final passingSsid = ssid;
+                if (passingSsid!.isEmpty) {
+                showError('SSID not provided.');
+                return;
+                } // Fetch from the database
+                await markAttendanceWithRSSI(passingSsid);
               },
               label: const Text(
                 'Mark Attendance',

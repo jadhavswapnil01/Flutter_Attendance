@@ -1,10 +1,28 @@
 import 'dart:convert';
-import 'dart:io';
+// import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
 import 'package:http/http.dart' as http;
 import 'constants.dart';
 import 'package:wifi_iot/wifi_iot.dart';
+// import 'package:flutter/services.dart';
+
+
+// class HotspotUtils {
+//   static const platform = MethodChannel('com.example.untitled4/rssi');
+
+//   static Future<String?> getHotspotSSID() async {
+//     try {
+//       final String? ssid = await platform.invokeMethod('getHotspotSSID');
+//       return ssid;
+//     } on PlatformException catch (e) {
+//       if (e.message == "ERROR: Fetching Hotspot SSID is not supported on Android 10+") {
+//         return null; // Special error handling for Android 10+
+//       }
+//       throw e;
+//     }
+//   }
+// }
 
 class TeacherDashboard extends StatefulWidget {
   final String email;
@@ -19,6 +37,7 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
   final TextEditingController _classroomnumberController = TextEditingController();
   final TextEditingController _subjectcodeController = TextEditingController();
   final PageController _pageController = PageController();
+  final TextEditingController _ssidController = TextEditingController();
 
   List classes = [];
   List subjectnames = [];
@@ -31,27 +50,79 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
   bool _isLoading = false;
   bool _isAttendanceActive = false;
   Map<String, String> classDetails = {};
+  String? hotspotSSID;
 
   @override
   void initState() {
     super.initState();
     fetchClasses();
+    checkHotspotStatus();
+    fetchHotspotSSID();
+    // hotspotSSID =  fetchSSIDFromDatabase();
+    
   }
 
-
-Future<String?> getHotspotSSID() async {
+Future<void> fetchHotspotSSID() async {
   try {
-    String? ssid = await WiFiForIoTPlugin.getWiFiAPSSID();
-    if (ssid != null) {
-      print("Hotspot SSID: $ssid");
-      return ssid;
-    } else {
-      print("Hotspot is not enabled or SSID is unavailable.");
-    }
+    // String? ssid = await HotspotUtils.getHotspotSSID();
+    // if (ssid == null || ssid.isEmpty) {
+    //   // If SSID is null or empty, fetch from the database
+    //   ssid = await fetchSSIDFromDatabase();
+    // }
+    String? ssid;
+    setState(() {
+      hotspotSSID = ssid;
+    });
   } catch (e) {
-    print("Error getting Hotspot SSID: $e");
+    setState(() {
+      hotspotSSID = null; // Prompt user to enter SSID
+    });
   }
-  return null;
+}
+
+Future<String?> fetchSSIDFromDatabase() async {
+  final response = await http.post(
+    Uri.parse('${APIConstants.baseUrl}/attendance_api/get_hotspot_ssid.php'),
+    body: {'email': widget.email},
+  );
+  
+  if (response.statusCode == 200) {
+    final data = json.decode(response.body);
+    if (data['success'] && data['ssid'] != null) {
+      return data['ssid']; // Return the SSID from the database
+    }
+  }
+  return null; // Return null if no SSID found
+}
+
+
+
+Future<void> checkHotspotStatus() async {
+  bool isHotspotEnabled = await WiFiForIoTPlugin.isWiFiAPEnabled();
+  if (!isHotspotEnabled) {
+    // Delay to ensure UI is built before showing the snackbar
+    Future.delayed(Duration(milliseconds: 700), () {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Please turn on Hotspot for online attendance to work.",
+            style: TextStyle(fontSize: 16),
+          ),
+          duration: Duration(seconds: 5),
+        ),
+      );
+    });
+  }
+}
+
+Future<void> updateHotspotSSIDInDatabase(String ssid) async {
+  final response = await http.post(
+    Uri.parse('${APIConstants.baseUrl}/attendance_api/update_hotspot_ssid.php'),
+    body: {
+      'email': widget.email,
+      'ssid': ssid,
+    },
+  );
 }
 
   Future<void> fetchClasses() async {
@@ -68,6 +139,7 @@ Future<String?> getHotspotSSID() async {
       });
     }
   }
+  
 
   Future<void> fetchSubjectNames(String classId) async {
     final response = await http.get(Uri.parse(
@@ -114,7 +186,13 @@ Future<String?> getHotspotSSID() async {
 
   Future<void> createClassroom() async {
     setState(() => _isLoading = true);
-
+    if (hotspotSSID == null || hotspotSSID!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Please provide the Hotspot SSID to proceed.")),
+      );
+      setState(() => _isLoading = false);
+      return;
+    }
     Location location = Location();
     bool hasPermission = await location.serviceEnabled() || await location.requestService();
 
@@ -182,43 +260,12 @@ Future<String?> getHotspotSSID() async {
       setState(() {
         _isAttendanceActive = !_isAttendanceActive;
       });
-      if (_isAttendanceActive) {
-      // Activate Hotspot
-     
-        await activateHotspot();
-      
-    } else {
-      // Deactivate Hotspot (Android only, as iOS can't be deactivated programmatically)
-      if (Platform.isAndroid) {
-        await WiFiForIoTPlugin.setWiFiAPEnabled(false);
-      }
-    }
     }
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(data['message'])),
     );
   }
-
-Future<void> activateHotspot() async {
-
-  bool isHotspotEnabled = await WiFiForIoTPlugin.isWiFiAPEnabled();
-  if (!isHotspotEnabled) {
-    bool success = await WiFiForIoTPlugin.setWiFiAPEnabled(true);
-    if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Hotspot enabled.and will be disabled when online attendance toggled deactive")),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Failed to enable hotspot. Please enable it manually.")),
-      );
-    }
-  }
-
-  // Provide manual configuration instructions
-
-}
 
   @override
   Widget build(BuildContext context) {
@@ -265,6 +312,21 @@ Future<void> activateHotspot() async {
               });
             },
           ),
+          SizedBox(height: 20),
+        
+          // Ensure the TextField allows editing
+          TextField(
+            controller: _ssidController,
+            decoration: InputDecoration(labelText: 'Enter Your Hotspot Name'),
+            onChanged: (value) {
+              setState(() {
+                hotspotSSID = value; 
+                updateHotspotSSIDInDatabase(value); // Update the SSID in the database
+                
+              });
+            },
+          ),
+       
           const SizedBox(height: 20),
           buildCustomDropdown(
             'Select Subject',
@@ -311,6 +373,7 @@ Future<void> activateHotspot() async {
           const SizedBox(height: 20),
           ElevatedButton(
             onPressed: createClassroom,
+            
             style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16,horizontal:25),
                     shape: RoundedRectangleBorder(
@@ -359,6 +422,19 @@ Future<void> activateHotspot() async {
                 )
               )
               : const Text('No class created yet.'),
+              SizedBox(height: 20),
+        
+          // Ensure the TextField allows editing
+          TextField(
+            controller: _ssidController,
+            decoration: InputDecoration(labelText: 'Enter Your Hotspot Name'),
+            onChanged: (value) {
+              setState(() {
+                hotspotSSID = value; 
+                updateHotspotSSIDInDatabase(value); // Update the SSID in the database
+              });
+            },
+          ),
           const SizedBox(height: 20),
           ElevatedButton(
             onPressed: toggleOnlineAttendance,
