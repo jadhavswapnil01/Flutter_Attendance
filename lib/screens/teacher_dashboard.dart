@@ -409,65 +409,131 @@ Future<void> updateHotspotSSIDInDatabase(String ssid) async {
     );
   }
 
+  // Widget buildManageAttendanceSection() {
+  //   return Padding(
+  //     padding: const EdgeInsets.all(16.0),
+  //     child: Column(
+  //       children: [
+  //         const SizedBox(height: 80),
+  //         const Text(
+  //           'Manage Attendance',
+  //           style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+  //         ),
+  //         const SizedBox(height: 20),
+  //         classDetails.isNotEmpty
+  //             ? Card(
+  //               elevation: 4,
+  //               margin: const EdgeInsets.symmetric(vertical: 10),
+  //               child: Padding(
+  //                     padding: const EdgeInsets.all(16.0),
+  //                 child: ListTile(
+                    
+  //                   title: Text('Class: ${classDetails['Class Name']}'),
+  //                   subtitle:Text('Class: ${classDetails['Subject Name']}'),
+  //                   trailing: Text('Lecture: ${classDetails['Lecture Type']}',
+  //                   style: TextStyle(fontSize: 13, color: const Color.fromARGB(255, 0, 0, 0)),),
+  //                 ),
+  //               )
+  //             )
+  //             : const Text('No class created yet.'),
+  //             SizedBox(height: 20),
+        
+  //         // Ensure the TextField allows editing
+  //         TextField(
+  //           controller: _ssidController,
+  //           decoration: InputDecoration(labelText: 'Enter Your Hotspot Name'),
+  //           onChanged: (value) {
+  //             setState(() {
+  //               hotspotSSID = value; 
+  //               updateHotspotSSIDInDatabase(value); // Update the SSID in the database
+  //             });
+  //           },
+  //         ),
+  //         const SizedBox(height: 20),
+  //         ElevatedButton(
+  //           onPressed: toggleOnlineAttendance,
+  //           style: ElevatedButton.styleFrom(
+  //                   padding: const EdgeInsets.symmetric(vertical: 16,horizontal:25),
+  //                   shape: RoundedRectangleBorder(
+  //                     borderRadius: BorderRadius.circular(20),
+  //                   ),
+  //                   backgroundColor: const Color(0xFF673AB7),
+  //                 ),
+  //           child: Text(_isAttendanceActive
+  //               ? 'Deactivate Online Attendance'
+  //               : 'Activate Online Attendance',
+  //               style: TextStyle(fontSize: 18, color: Colors.white)),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
   Widget buildManageAttendanceSection() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        children: [
-          const SizedBox(height: 80),
-          const Text(
-            'Manage Attendance',
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 20),
-          classDetails.isNotEmpty
-              ? Card(
+  return Padding(
+    padding: const EdgeInsets.all(16.0),
+    child: Column(
+      children: [
+        const SizedBox(height: 80),
+        const Text(
+          'Manage Attendance',
+          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 20),
+        classDetails.isNotEmpty
+            ? Card(
                 elevation: 4,
                 margin: const EdgeInsets.symmetric(vertical: 10),
                 child: Padding(
-                      padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.all(16.0),
                   child: ListTile(
-                    
                     title: Text('Class: ${classDetails['Class Name']}'),
-                    subtitle:Text('Class: ${classDetails['Subject Name']}'),
-                    trailing: Text('Lecture: ${classDetails['Lecture Type']}',
-                    style: TextStyle(fontSize: 13, color: const Color.fromARGB(255, 0, 0, 0)),),
-                  ),
-                )
-              )
-              : const Text('No class created yet.'),
-              SizedBox(height: 20),
-        
-          // Ensure the TextField allows editing
-          TextField(
-            controller: _ssidController,
-            decoration: InputDecoration(labelText: 'Enter Your Hotspot Name'),
-            onChanged: (value) {
-              setState(() {
-                hotspotSSID = value; 
-                updateHotspotSSIDInDatabase(value); // Update the SSID in the database
-              });
-            },
-          ),
-          const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: toggleOnlineAttendance,
-            style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16,horizontal:25),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
+                    subtitle: Text('Subject: ${classDetails['Subject Name']}'),
+                    trailing: Text(
+                      'Lecture: ${classDetails['Lecture Type']}',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Color.fromARGB(255, 0, 0, 0),
+                      ),
                     ),
-                    backgroundColor: const Color(0xFF673AB7),
                   ),
-            child: Text(_isAttendanceActive
+                ),
+              )
+            : const Text('No class created yet.'),
+        const SizedBox(height: 20),
+        ElevatedButton(
+          onPressed: () {
+            toggleOnlineAttendance();
+            if (!_isAttendanceActive) {
+              Future.delayed(const Duration(seconds: 10), () {
+                if (_isAttendanceActive) {
+                  setState(() {
+                    _isAttendanceActive = false; // Automatically deactivate
+                  });
+                }
+              });
+            }
+          },
+          style: ElevatedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 25),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            backgroundColor: const Color(0xFF673AB7),
+          ),
+          child: Text(
+            _isAttendanceActive
                 ? 'Deactivate Online Attendance'
                 : 'Activate Online Attendance',
-                style: TextStyle(fontSize: 18, color: Colors.white)),
+            style: const TextStyle(fontSize: 18, color: Colors.white),
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
+}
+
+
+
 
   Widget buildCustomTextField(String hintText, TextEditingController controller) {
     return Container(
