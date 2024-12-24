@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'constants.dart';
 import 'dart:async';
 import 'package:flutter/services.dart';
+import 'package:untitled4/screens/background_scaffold.dart';
 
 
 class ViewAttendance extends StatefulWidget {
@@ -213,7 +214,7 @@ class _ViewAttendanceState extends State<ViewAttendance> {
     final isLastAttendancePresent =
         lastAttendance != null && lastAttendance['status'] == 'P';
 
-    return Scaffold(
+    return BackgroundScaffold(
       appBar: AppBar(
         title: const Text('Attendance Details'),
         backgroundColor: const Color(0xFF1976D2),
@@ -227,6 +228,7 @@ class _ViewAttendanceState extends State<ViewAttendance> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  const SizedBox(height: 70),
                   Card(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -237,6 +239,7 @@ class _ViewAttendanceState extends State<ViewAttendance> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          
                           Text(
                             'Subject: ${widget.subjectCode} - ${widget.subjectName}',
                             style: const TextStyle(
@@ -272,13 +275,14 @@ class _ViewAttendanceState extends State<ViewAttendance> {
                               final attendance = attendanceInfo[index];
                               final isPresent = attendance['status'] == 'P';
                               final isLastCard = index == attendanceInfo.length - 1;
+                              
 
                               return Card(
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 elevation: 3,
-                                margin: const EdgeInsets.symmetric(vertical: 8),
+                                margin: const EdgeInsets.symmetric(vertical: 4), // Reduced margin here
                                 child: ListTile(
                                   leading: CircleAvatar(
                                     backgroundColor:
