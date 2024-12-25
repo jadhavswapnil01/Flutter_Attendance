@@ -108,7 +108,8 @@ class _ViewAttendanceState extends State<ViewAttendance> {
         }
         await Future.delayed(const Duration(milliseconds: 1000));
       }on PlatformException catch (e) {
-      showError('Failed to fetch RSSI: ${e.message}');
+      showError('Failed to fetch RSSI: ${e.message},  Turn on Wi-Fi / get closer to the teacher and try again.');
+      break;
       }
       }
     
