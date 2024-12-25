@@ -1,28 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
-// import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
 import 'package:http/http.dart' as http;
 import 'constants.dart';
 import 'package:wifi_iot/wifi_iot.dart';
-// import 'package:flutter/services.dart';
-
-
-// class HotspotUtils {
-//   static const platform = MethodChannel('com.example.untitled4/rssi');
-
-//   static Future<String?> getHotspotSSID() async {
-//     try {
-//       final String? ssid = await platform.invokeMethod('getHotspotSSID');
-//       return ssid;
-//     } on PlatformException catch (e) {
-//       if (e.message == "ERROR: Fetching Hotspot SSID is not supported on Android 10+") {
-//         return null; // Special error handling for Android 10+
-//       }
-//       throw e;
-//     }
-//   }
-// }
 import 'package:untitled4/screens/background_scaffold.dart';
 
 
@@ -63,25 +45,6 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
     fetchSSIDFromDatabase();
     
   }
-
-// Future<void> fetchHotspotSSID() async {
-//   try {
-//     // String? ssid = await HotspotUtils.getHotspotSSID();
-//     // if (ssid == null || ssid.isEmpty) {
-//     //   // If SSID is null or empty, fetch from the database
-//     //   ssid = await fetchSSIDFromDatabase();
-//     // }
-//     String? ssid;
-//     setState(() {
-//       hotspotSSID = ssid;
-//     });
-//   } catch (e) {
-//     setState(() {
-//       hotspotSSID = null; // Prompt user to enter SSID
-//     });
-//   }
-// }
-
 Future<String?> fetchSSIDFromDatabase() async {
   final response = await http.post(
     Uri.parse('${APIConstants.baseUrl}/attendance_api/get_hotspot_ssid.php'),
@@ -409,66 +372,7 @@ Future<void> updateHotspotSSIDInDatabase(String ssid) async {
     );
   }
 
-  // Widget buildManageAttendanceSection() {
-  //   return Padding(
-  //     padding: const EdgeInsets.all(16.0),
-  //     child: Column(
-  //       children: [
-  //         const SizedBox(height: 80),
-  //         const Text(
-  //           'Manage Attendance',
-  //           style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-  //         ),
-  //         const SizedBox(height: 20),
-  //         classDetails.isNotEmpty
-  //             ? Card(
-  //               elevation: 4,
-  //               margin: const EdgeInsets.symmetric(vertical: 10),
-  //               child: Padding(
-  //                     padding: const EdgeInsets.all(16.0),
-  //                 child: ListTile(
-                    
-  //                   title: Text('Class: ${classDetails['Class Name']}'),
-  //                   subtitle:Text('Class: ${classDetails['Subject Name']}'),
-  //                   trailing: Text('Lecture: ${classDetails['Lecture Type']}',
-  //                   style: TextStyle(fontSize: 13, color: const Color.fromARGB(255, 0, 0, 0)),),
-  //                 ),
-  //               )
-  //             )
-  //             : const Text('No class created yet.'),
-  //             SizedBox(height: 20),
-        
-  //         // Ensure the TextField allows editing
-  //         TextField(
-  //           controller: _ssidController,
-  //           decoration: InputDecoration(labelText: 'Enter Your Hotspot Name'),
-  //           onChanged: (value) {
-  //             setState(() {
-  //               hotspotSSID = value; 
-  //               updateHotspotSSIDInDatabase(value); // Update the SSID in the database
-  //             });
-  //           },
-  //         ),
-  //         const SizedBox(height: 20),
-  //         ElevatedButton(
-  //           onPressed: toggleOnlineAttendance,
-  //           style: ElevatedButton.styleFrom(
-  //                   padding: const EdgeInsets.symmetric(vertical: 16,horizontal:25),
-  //                   shape: RoundedRectangleBorder(
-  //                     borderRadius: BorderRadius.circular(20),
-  //                   ),
-  //                   backgroundColor: const Color(0xFF673AB7),
-  //                 ),
-  //           child: Text(_isAttendanceActive
-  //               ? 'Deactivate Online Attendance'
-  //               : 'Activate Online Attendance',
-  //               style: TextStyle(fontSize: 18, color: Colors.white)),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-  Widget buildManageAttendanceSection() {
+Widget buildManageAttendanceSection() {
   return Padding(
     padding: const EdgeInsets.all(16.0),
     child: Column(
@@ -501,15 +405,14 @@ Future<void> updateHotspotSSIDInDatabase(String ssid) async {
             : const Text('No class created yet.'),
         const SizedBox(height: 20),
         ElevatedButton(
-          onPressed: () {
-            toggleOnlineAttendance();
-            if (!_isAttendanceActive) {
-              Future.delayed(const Duration(seconds: 10), () {
-                if (_isAttendanceActive) {
-                  setState(() {
-                    _isAttendanceActive = false; // Automatically deactivate
-                  });
-                }
+          onPressed: () async {
+            await toggleOnlineAttendance();
+            if (_isAttendanceActive) {
+              _startCountdownTimer();
+            } else {
+              _countdownTimer?.cancel();
+              setState(() {
+                _remainingTime = const Duration(minutes: 6, seconds: 7);
               });
             }
           },
@@ -527,9 +430,53 @@ Future<void> updateHotspotSSIDInDatabase(String ssid) async {
             style: const TextStyle(fontSize: 18, color: Colors.white),
           ),
         ),
+        const SizedBox(height: 20),
+        _isAttendanceActive && _remainingTime.inSeconds > 0
+            ? Text(
+                'Time Remaining: ${_formatTime(_remainingTime)}',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Color.fromARGB(255, 0, 0, 0),
+                ),
+              )
+            : const SizedBox(),
       ],
     ),
   );
+}
+
+Duration _remainingTime = const Duration(minutes: 6, seconds: 7);
+Timer? _countdownTimer;
+
+void _startCountdownTimer() {
+  _countdownTimer?.cancel();
+  _remainingTime = const Duration(minutes: 6, seconds: 7);
+  _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    if (_remainingTime.inSeconds > 0) {
+      setState(() {
+        _remainingTime = Duration(seconds: _remainingTime.inSeconds - 1);
+      });
+    } else {
+      timer.cancel();
+      setState(() {
+        _isAttendanceActive = false;
+      });
+    }
+  });
+}
+
+String _formatTime(Duration duration) {
+  String twoDigits(int n) => n.toString().padLeft(2, '0');
+  final minutes = twoDigits(duration.inMinutes.remainder(60));
+  final seconds = twoDigits(duration.inSeconds.remainder(60));
+  return '$minutes:$seconds';
+}
+
+@override
+void dispose() {
+  _countdownTimer?.cancel();
+  super.dispose();
 }
 
 

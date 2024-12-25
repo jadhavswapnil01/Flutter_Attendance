@@ -47,28 +47,28 @@ static Future<void> saveStudent(Map<String, String> studentData) async {
       studentData, // Directly use the passed map
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
-    debugPrint("Student ${studentData['username']} inserted successfully.");
+    debugPrint("Student ${studentData['email']} inserted successfully.");
   } catch (e) {
     debugPrint("Error saving student: $e");
   }
 }
 
 // Fetch the UUID of a specific student by username or ID
-static Future<String?> fetchUuidByUsername(String username) async {
+static Future<String?> fetchUuidByEmail(String email) async {
   if (_database == null) await initDatabase();
 
   try {
     final List<Map<String, dynamic>> result = await _database!.query(
       'students',
       columns: ['uuid'],
-      where: 'username = ?',
-      whereArgs: [username],
+      where: 'email = ?',
+      whereArgs: [email],
     );
 
     if (result.isNotEmpty) {
       return result.first['uuid'] as String;
     } else {
-      debugPrint("No UUID found for username $username.");
+      debugPrint("No UUID found for Email $email.");
       return null;
     }
   } catch (e) {
@@ -147,4 +147,30 @@ static Future<String?> fetchUuidByUsername(String username) async {
       debugPrint("Error deleting student: $e");
     }
   }
+
+  // Check if a UUID exists in the database
+static Future<bool> doesUuidExist(String uuid) async {
+  if (_database == null) await initDatabase();
+
+  try {
+    final List<Map<String, dynamic>> result = await _database!.query(
+      'students',
+      columns: ['id'], // Fetching only the ID to reduce overhead
+      where: 'uuid = ?',
+      whereArgs: [uuid],
+    );
+
+    if (result.isNotEmpty) {
+      debugPrint("UUID $uuid exists in the database.");
+      return true;
+    } else {
+      debugPrint("UUID $uuid does not exist in the database.");
+      return false;
+    }
+  } catch (e) {
+    debugPrint("Error checking UUID: $e");
+    return false;
+  }
+}
+
 }

@@ -7,6 +7,7 @@ import 'constants.dart';
 import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:untitled4/screens/background_scaffold.dart';
+import 'package:untitled4/helpers/database_helper.dart';
 
 
 class ViewAttendance extends StatefulWidget {
@@ -169,17 +170,28 @@ class _ViewAttendanceState extends State<ViewAttendance> {
   }
 
   Future<void> markAttendanceWithRSSI(String ssid) async {
-    final averageDistance = await calculateAverageDistance(ssid);
-    if (averageDistance == double.infinity || averageDistance == 0) {
-        showError('Invalid RSSI or distance detected. Ensure Wi-Fi is enabled.');
-        return;
-    }
-    if (averageDistance <= 1.7) {
-      markAttendance();
-    } else {
-      showError('You are too away from the Teacher');
-    }
+  // Check if the provided UUID exists in the database
+  bool uuidExists = await DatabaseHelper.doesUuidExist(widget.uuid!);
+  if (!uuidExists) {
+    showError('Loged in from another device. Attendance not allowed.');
+    return;
   }
+
+  // Calculate the average distance using RSSI
+  final averageDistance = await calculateAverageDistance(ssid);
+  if (averageDistance == double.infinity || averageDistance == 0) {
+    showError('Invalid RSSI or distance detected. Ensure Wi-Fi is enabled.');
+    return;
+  }
+
+  // Check if the student is within the valid range to mark attendance
+  if (averageDistance <= 1.7) {
+    markAttendance();
+  } else {
+    showError('You are far away from the teacher.');
+  }
+}
+
 
   Future<void> markAttendance() async {
     final response = await http.post(
@@ -215,20 +227,21 @@ class _ViewAttendanceState extends State<ViewAttendance> {
         lastAttendance != null && lastAttendance['status'] == 'P';
 
     return BackgroundScaffold(
-      appBar: AppBar(
-        title: const Text('Attendance Details'),
-        backgroundColor: const Color(0xFF1976D2),
-      ),
+      // appBar: AppBar(
+      //   title: const Text('Attendance Details'),
+      //   backgroundColor: const Color(0xFF1976D2),
+      // ),
       body: isLoading
           ? const Center(
               child: CircularProgressIndicator(),
             )
-          : Padding(
+            : SingleChildScrollView(
+         child : Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 70),
+                  const SizedBox(height: 25),
                   Card(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -261,20 +274,21 @@ class _ViewAttendanceState extends State<ViewAttendance> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
                   const Text(
                     'Attendance Info:',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
-                  Expanded(
-                    child: attendanceInfo.isNotEmpty
-                        ? ListView.builder(
-                            itemCount: attendanceInfo.length,
-                            itemBuilder: (context, index) {
-                              final attendance = attendanceInfo[index];
-                              final isPresent = attendance['status'] == 'P';
-                              final isLastCard = index == attendanceInfo.length - 1;
+                  attendanceInfo.isNotEmpty
+                      ? ListView.builder(
+                          shrinkWrap: true, // Prevent ListView from taking unnecessary space
+                          physics: const NeverScrollableScrollPhysics(), // Disable scrolling if not needed
+                          itemCount: attendanceInfo.length,
+                          itemBuilder: (context, index) {
+                            final attendance = attendanceInfo[index];
+                            final isPresent = attendance['status'] == 'P';
+                            final isLastCard = index == attendanceInfo.length - 1;
                               
 
                               return Card(
@@ -315,10 +329,11 @@ class _ViewAttendanceState extends State<ViewAttendance> {
                             },
                           )
                         : const Center(child: Text('No attendance records found.')),
-                  ),
+                  
                 ],
               ),
             ),
+    ),
       floatingActionButton: isAttendanceActive && !isLastAttendancePresent
           ? FloatingActionButton.extended(
               onPressed: () async {

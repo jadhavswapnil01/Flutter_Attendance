@@ -12,19 +12,18 @@ if ($conn->connect_error) {
 }
 
 // Retrieve POST data
-$username = isset($_POST['username']) ? trim($_POST['username']) : '';
+$email = isset($_POST['email']) ? trim($_POST['email']) : '';
 $password = isset($_POST['password']) ? trim($_POST['password']) : '';
-$uuid = isset($_POST['uuid']) ? trim($_POST['uuid']) : '';
 
 // Input validation
-if (empty($username) || empty($password) || empty($uuid)) {
-    echo json_encode(['success' => false, 'message' => 'All fields are required.']);
+if (empty($email) || empty($password)) {
+    echo json_encode(['success' => false, 'message' => 'Email and password are required.', 'uuid' => null]);
     exit();
 }
 
 // Query to fetch user password hash and UUID
-$query = $conn->prepare("SELECT password, uuid FROM students WHERE username = ?");
-$query->bind_param('s', $username);
+$query = $conn->prepare("SELECT password, uuid FROM students WHERE college_email = ?");
+$query->bind_param('s', $email);
 $query->execute();
 $result = $query->get_result();
 
@@ -33,17 +32,12 @@ if ($result->num_rows > 0) {
 
     // Verify the hashed password
     if (password_verify($password, $row['password'])) {
-        // Verify UUID
-        if ($row['uuid'] === $uuid) {
-            echo json_encode(['success' => true, 'message' => 'Login successful.']);
-        } else {
-            echo json_encode(['success' => false, 'message' => 'UUID mismatch.']);
-        }
+        echo json_encode(['success' => true, 'message' => 'Login successful.', 'uuid' => $row['uuid']]);
     } else {
-        echo json_encode(['success' => false, 'message' => 'Incorrect password.']);
+        echo json_encode(['success' => false, 'message' => 'Incorrect password.', 'uuid' => $row['uuid']]);
     }
 } else {
-    echo json_encode(['success' => false, 'message' => 'Username not found.']);
+    echo json_encode(['success' => false, 'message' => 'Email not found.', 'uuid' => null]);
 }
 
 // Cleanup

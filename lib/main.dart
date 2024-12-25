@@ -39,11 +39,11 @@ class MyApp extends StatelessWidget {
           ),
           errorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: Colors.red),
+            borderSide: const BorderSide(color: Color.fromARGB(255, 238, 98, 88)),
           ),
           focusedErrorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: Colors.red, width: 2.0),
+            borderSide: const BorderSide(color: Color.fromARGB(255, 238, 98, 88), width: 2.0),
           ),
           prefixIconColor: Colors.black,
         ),
@@ -59,10 +59,6 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BackgroundScaffold(
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-      ),
       body: Container(
         child: Center(
           child: SingleChildScrollView(
@@ -71,37 +67,98 @@ class HomeScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 10),
                   const Icon(
                     Icons.school_rounded,
                     size: 120,
                     color: Color(0xFF673AB7),
                   ),
-                  const SizedBox(height: 5),
-                  const Text(
-                    'Welcome to Attendance App',
-                    style: TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF673AB7),
-                    ),
+                  const SizedBox(height: 0),
+                  RichText(
                     textAlign: TextAlign.center,
+                    text: const TextSpan(
+                      children: [
+                        TextSpan(
+                          text: 'W',
+                          style: TextStyle(
+                            fontSize: 31,
+                            fontWeight: FontWeight.bold,
+                            color:Color(0xFF673AB7),
+                          ),
+                        ),
+                        TextSpan(
+                          text: 'elcome to Attend',
+                          style: TextStyle(
+                            fontSize: 26.5,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF673AB7),
+                          ),
+                        ),
+                        TextSpan(
+                          text: 'ance App',
+                          style: TextStyle(
+                            fontSize: 26.9,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF673AB7),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 75),
                   ..._buildButtonList(context),
+                  
                 ],
+                
               ),
+              
             ),
+            
           ),
+          
         ),
+        
       ),
+      
     );
+    
   }
 
   List<Widget> _buildButtonList(BuildContext context) {
+     
     final buttonData = [
+      
       {
-        'text': 'Student Register',
+        'text': RichText(
+          text: const TextSpan(
+            children: [
+              TextSpan(
+                text: 'Student',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF673AB7),
+                ),
+              ),
+              TextSpan(
+                text: ' Regis',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF673AB7),
+                ),
+              ),
+              TextSpan(
+                text: 'ter',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF673AB7),
+                ),
+              ),
+            ],
+          ),
+        ),
         'icon': Icons.person_add_alt_1,
         'onPressed': () {
           Navigator.push(
@@ -189,14 +246,16 @@ class HomeScreen extends StatelessWidget {
                       Icon(button['icon'] as IconData,
                           color: const Color(0xFF673AB7)),
                       const SizedBox(width: 10),
-                      Text(
-                        button['text'] as String,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF673AB7),
-                        ),
-                      ),
+                      button['text'] is String
+                          ? Text(
+                              button['text'] as String,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF673AB7),
+                              ),
+                            )
+                          : button['text'] as Widget,
                     ],
                   ),
                 ),
@@ -214,7 +273,7 @@ class StudentsList extends StatelessWidget {
     return BackgroundScaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        elevation: 0,
+        elevation: 10,
         title: const Text(
           'Stored Students',
           style: TextStyle(

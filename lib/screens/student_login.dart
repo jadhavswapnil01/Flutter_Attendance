@@ -1,10 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import '../helpers/database_helper.dart';
 import './student_dashboard.dart';
 import 'constants.dart';
-import 'package:untitled4/screens/background_scaffold.dart';
+import 'background_scaffold.dart';
 import 'student_register.dart';
 
 class StudentLogin extends StatefulWidget {
@@ -15,37 +14,18 @@ class StudentLogin extends StatefulWidget {
 }
 
 class _StudentLoginState extends State<StudentLogin> {
-  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   String message = '';
   bool _isLoading = false;
 
-  Future<String?> getStudentUuid(String username) async {
-    String? uuid = await DatabaseHelper.fetchUuidByUsername(username);
-
-    if (uuid != null) {
-      debugPrint("UUID for $username: $uuid");
-    } else {
-      debugPrint("UUID not found for $username.");
-    }
-    return uuid;
-  }
-
   Future<void> loginUser() async {
-    final username = _usernameController.text.trim();
+    final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
-    final uuid = await getStudentUuid(username);
 
-    if (username.isEmpty || password.isEmpty) {
+    if (email.isEmpty || password.isEmpty) {
       setState(() {
-        message = 'Username and password are required.';
-      });
-      return;
-    }
-
-    if (uuid == null) {
-      setState(() {
-        message = 'Wrong Username OR you are trying to login another student account.';
+        message = 'Email and password are required.';
       });
       return;
     }
@@ -60,15 +40,15 @@ class _StudentLoginState extends State<StudentLogin> {
       final response = await http.post(
         Uri.parse(url),
         body: {
-          'username': username,
+          'email': email,
           'password': password,
-          'uuid': uuid,
         },
       );
 
       final responseData = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
+        final uuid = responseData['uuid'];
         if (responseData['success'] == true) {
           setState(() {
             message = 'Login Successful!';
@@ -106,7 +86,6 @@ class _StudentLoginState extends State<StudentLogin> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        //centerTitle: true,
         title: const Text(
           'Student Login',
           style: TextStyle(
@@ -138,8 +117,8 @@ class _StudentLoginState extends State<StudentLogin> {
               ),
               const SizedBox(height: 30),
               _buildInputField(
-                controller: _usernameController,
-                labelText: 'Username',
+                controller: _emailController,
+                labelText: 'Email',
                 icon: Icons.person_outline,
               ),
               const SizedBox(height: 20),
@@ -160,7 +139,6 @@ class _StudentLoginState extends State<StudentLogin> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                     backgroundColor: const Color(0xFF673AB7),
-                  
                   ),
                   child: _isLoading
                       ? Row(
@@ -183,7 +161,6 @@ class _StudentLoginState extends State<StudentLogin> {
                           style: TextStyle(fontSize: 22, color: Colors.white),
                         ),
                 ),
-                
               ),
               const SizedBox(height: 20),
               Text(
@@ -192,23 +169,23 @@ class _StudentLoginState extends State<StudentLogin> {
                 textAlign: TextAlign.center,
               ),
               TextButton(
-                  onPressed: () {
-                    Navigator.pushReplacement(
+                onPressed: () {
+                  Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
                       builder: (_) => StudentRegister(),
                     ),
                   );
-                  },
-                  child: const Text(
-                    'Don’t have an account? Register here.',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF673AB7),
-                      fontWeight: FontWeight.bold,
-                    ),
+                },
+                child: const Text(
+                  'Don’t have an account? Register here.',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF673AB7),
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
+              ),
             ],
           ),
         ),

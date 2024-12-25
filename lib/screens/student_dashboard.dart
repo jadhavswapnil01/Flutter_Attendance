@@ -76,9 +76,9 @@ class _StudentDashboardState extends State<StudentDashboard>
     final random = Random();
     return Color.fromARGB(
       255,
-      200 + random.nextInt(55),
-      200 + random.nextInt(55),
-      200 + random.nextInt(55),
+      210 + random.nextInt(35),
+      210 + random.nextInt(35),
+      210 + random.nextInt(35),
     );
   }
 
