@@ -19,6 +19,7 @@ class _StudentLoginState extends State<StudentLogin> {
   final TextEditingController _passwordController = TextEditingController();
   String message = '';
   bool _isLoading = false;
+  bool _isPasswordVisible = false; // Password visibility toggle
 
   Future<String?> getStudentUuid(String username) async {
     String? uuid = await DatabaseHelper.fetchUuidByUsername(username);
@@ -106,7 +107,6 @@ class _StudentLoginState extends State<StudentLogin> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        //centerTitle: true,
         title: const Text(
           'Student Login',
           style: TextStyle(
@@ -147,7 +147,17 @@ class _StudentLoginState extends State<StudentLogin> {
                 controller: _passwordController,
                 labelText: 'Password',
                 icon: Icons.lock_outline,
-                obscureText: true,
+                obscureText: !_isPasswordVisible,
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _isPasswordVisible = !_isPasswordVisible;
+                    });
+                  },
+                ),
               ),
               const SizedBox(height: 30),
               SizedBox(
@@ -160,7 +170,6 @@ class _StudentLoginState extends State<StudentLogin> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                     backgroundColor: const Color(0xFF673AB7),
-                  
                   ),
                   child: _isLoading
                       ? Row(
@@ -183,7 +192,6 @@ class _StudentLoginState extends State<StudentLogin> {
                           style: TextStyle(fontSize: 22, color: Colors.white),
                         ),
                 ),
-                
               ),
               const SizedBox(height: 20),
               Text(
@@ -192,23 +200,23 @@ class _StudentLoginState extends State<StudentLogin> {
                 textAlign: TextAlign.center,
               ),
               TextButton(
-                  onPressed: () {
-                    Navigator.pushReplacement(
+                onPressed: () {
+                  Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
                       builder: (_) => StudentRegister(),
                     ),
                   );
-                  },
-                  child: const Text(
-                    'Don’t have an account? Register here.',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF673AB7),
-                      fontWeight: FontWeight.bold,
-                    ),
+                },
+                child: const Text(
+                  'Don’t have an account? Register here.',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF673AB7),
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
+              ),
             ],
           ),
         ),
@@ -221,12 +229,14 @@ class _StudentLoginState extends State<StudentLogin> {
     required String labelText,
     required IconData icon,
     bool obscureText = false,
+    Widget? suffixIcon,
   }) {
     return TextFormField(
       controller: controller,
       decoration: InputDecoration(
         labelText: labelText,
         prefixIcon: Icon(icon),
+        suffixIcon: suffixIcon,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
         ),
