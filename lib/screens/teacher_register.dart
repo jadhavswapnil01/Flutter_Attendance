@@ -5,7 +5,6 @@ import 'constants.dart';
 import 'teacher_login.dart';
 import 'package:untitled4/screens/background_scaffold.dart';
 
-
 class TeacherRegister extends StatefulWidget {
   const TeacherRegister({Key? key}) : super(key: key);
 
@@ -20,6 +19,7 @@ class _TeacherRegisterState extends State<TeacherRegister> {
   final _passwordController = TextEditingController();
   final _teacherIdController = TextEditingController();
   bool _isLoading = false;
+  bool _isPasswordVisible = false; // Password visibility toggle
 
   Future<void> _registerTeacher() async {
     if (_formKey.currentState!.validate()) {
@@ -76,7 +76,6 @@ class _TeacherRegisterState extends State<TeacherRegister> {
   @override
   Widget build(BuildContext context) {
     return BackgroundScaffold(
-    
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -146,7 +145,17 @@ class _TeacherRegisterState extends State<TeacherRegister> {
                     controller: _passwordController,
                     labelText: 'Password',
                     icon: Icons.lock_outline,
-                    obscureText: true,
+                    obscureText: !_isPasswordVisible,
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _isPasswordVisible = !_isPasswordVisible;
+                        });
+                      },
+                    ),
                   ),
                   const SizedBox(height: 30),
                   SizedBox(
@@ -185,6 +194,7 @@ class _TeacherRegisterState extends State<TeacherRegister> {
     required IconData icon,
     TextInputType keyboardType = TextInputType.text,
     bool obscureText = false,
+    Widget? suffixIcon,
     String? Function(String?)? validator,
   }) {
     return TextFormField(
@@ -192,6 +202,7 @@ class _TeacherRegisterState extends State<TeacherRegister> {
       decoration: InputDecoration(
         labelText: labelText,
         prefixIcon: Icon(icon),
+        suffixIcon: suffixIcon,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
         ),

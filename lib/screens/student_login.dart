@@ -18,6 +18,7 @@ class _StudentLoginState extends State<StudentLogin> {
   final TextEditingController _passwordController = TextEditingController();
   String message = '';
   bool _isLoading = false;
+  bool _isPasswordVisible = false; // Password visibility toggle
 
   Future<void> loginUser() async {
     final email = _emailController.text.trim();
@@ -126,7 +127,17 @@ class _StudentLoginState extends State<StudentLogin> {
                 controller: _passwordController,
                 labelText: 'Password',
                 icon: Icons.lock_outline,
-                obscureText: true,
+                obscureText: !_isPasswordVisible,
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _isPasswordVisible = !_isPasswordVisible;
+                    });
+                  },
+                ),
               ),
               const SizedBox(height: 30),
               SizedBox(
@@ -198,12 +209,14 @@ class _StudentLoginState extends State<StudentLogin> {
     required String labelText,
     required IconData icon,
     bool obscureText = false,
+    Widget? suffixIcon,
   }) {
     return TextFormField(
       controller: controller,
       decoration: InputDecoration(
         labelText: labelText,
         prefixIcon: Icon(icon),
+        suffixIcon: suffixIcon,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
         ),

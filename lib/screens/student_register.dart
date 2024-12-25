@@ -27,6 +27,7 @@ class _StudentRegisterState extends State<StudentRegister> {
   List<Map<String, dynamic>> _classes = [];
   String? _selectedClassId;
   bool _isLoading = false;
+  bool _isPasswordVisible = false; // For password visibility toggle
   final Uuid uuid = Uuid();
 
   @override
@@ -156,7 +157,7 @@ class _StudentRegisterState extends State<StudentRegister> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const SizedBox(height: 75), // Pushes "Get Started" text down
+                  const SizedBox(height: 75),
                   const Text(
                     'Get Started',
                     style: TextStyle(
@@ -192,7 +193,6 @@ class _StudentRegisterState extends State<StudentRegister> {
                       if (value == null || value.isEmpty) {
                         return 'Please enter an email';
                       }
-                      // Corrected regex for email validation
                       if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
                           .hasMatch(value)) {
                         return 'Enter a valid email';
@@ -201,12 +201,7 @@ class _StudentRegisterState extends State<StudentRegister> {
                     },
                   ),
                   const SizedBox(height: 20),
-                  _buildInputField(
-                    controller: _passwordController,
-                    labelText: 'Password',
-                    icon: Icons.lock_outline,
-                    obscureText: true,
-                  ),
+                  _buildPasswordField(),
                   const SizedBox(height: 20),
                   DropdownButtonFormField<String>(
                     value: _selectedClassId,
@@ -253,7 +248,7 @@ class _StudentRegisterState extends State<StudentRegister> {
                           onPressed: _pickImage,
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 10),
-                            backgroundColor: const Color.fromARGB(255, 107, 60, 187),
+                            backgroundColor: const Color(0xFF673AB7),
                           ),
                           child: const Text(
                             'Pick Image',
@@ -309,6 +304,31 @@ class _StudentRegisterState extends State<StudentRegister> {
       keyboardType: keyboardType,
       obscureText: obscureText,
       validator: validator ?? (value) => value!.isEmpty ? 'This field is required' : null,
+    );
+  }
+
+  Widget _buildPasswordField() {
+    return TextFormField(
+      controller: _passwordController,
+      obscureText: !_isPasswordVisible,
+      decoration: InputDecoration(
+        labelText: 'Password',
+        prefixIcon: const Icon(Icons.lock_outline),
+        suffixIcon: IconButton(
+          icon: Icon(
+            _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+          ),
+          onPressed: () {
+            setState(() {
+              _isPasswordVisible = !_isPasswordVisible;
+            });
+          },
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+      ),
+      validator: (value) => value!.isEmpty ? 'This field is required' : null,
     );
   }
 }
