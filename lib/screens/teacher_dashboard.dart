@@ -6,6 +6,8 @@ import 'package:http/http.dart' as http;
 import 'constants.dart';
 import 'package:wifi_iot/wifi_iot.dart';
 import 'package:untitled4/screens/background_scaffold.dart';
+import 'package:uuid/uuid.dart';
+import 'package:flutter/services.dart';
 
 
 class TeacherDashboard extends StatefulWidget {
@@ -22,6 +24,8 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
   final TextEditingController _subjectcodeController = TextEditingController();
   final PageController _pageController = PageController();
   final TextEditingController _ssidController = TextEditingController();
+  static const platform = MethodChannel('com.example.untitled4/rssi');
+  late String _generatedUuid;
 
   List classes = [];
   List subjectnames = [];
@@ -206,31 +210,134 @@ Future<void> updateHotspotSSIDInDatabase(String ssid) async {
 
     _pageController.animateToPage(1, duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
   }
-  Future<void> toggleOnlineAttendance() async {
-    final newStatus = _isAttendanceActive ? 'inactive' : 'active';
-    String selectedClassName = classes
-      .firstWhere((classItem) => classItem['id'].toString() == selectedClassId)['class_name'];
 
+  Future<bool> updateUUID(String email, String uuid) async {
+  final url = Uri.parse("${APIConstants.baseUrl}/attendance_api/update_uuid.php"); // Replace with your server URL
+
+  try {
     final response = await http.post(
-      Uri.parse('${APIConstants.baseUrl}/attendance_api/update_attendance_status.php'),
+      url,
       body: {
-        'class_name': selectedClassName,
-        'subject_code': subjectCode,
-        'lec_type': selectedLectureType,
-        'status': newStatus,
+        'email': email,
+        'uuid': uuid,
       },
     );
 
-    final data = json.decode(response.body);
-    if (data['success']) {
-      setState(() {
-        _isAttendanceActive = !_isAttendanceActive;
-      });
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      if (data['success'] == true) {
+        print("UUID updated successfully.");
+        return true;
+      } else {
+        print("Error: ${data['message']}");
+        return false;
+      }
+    } else {
+      print("Server error: ${response.statusCode}");
+      return false;
     }
+  } catch (e) {
+    print("Exception occurred: $e");
+    return false;
+  }
+}
+  Future<void> toggleOnlineAttendance() async {
+  final newStatus = _isAttendanceActive ? 'inactive' : 'active';
+  String selectedClassName = classes
+      .firstWhere((classItem) => classItem['id'].toString() == selectedClassId)['class_name'];
+
+  final response = await http.post(
+    Uri.parse('${APIConstants.baseUrl}/attendance_api/update_attendance_status.php'),
+    body: {
+      'class_name': selectedClassName,
+      'subject_code': subjectCode,
+      'lec_type': selectedLectureType,
+      'status': newStatus,
+    },
+  );
+
+  final data = json.decode(response.body);
+  if (data['success']) {
+    if (!_isAttendanceActive) {
+      // Generate a unique UUID and try starting the beacon
+      _generatedUuid = _generateUuid();
+      final beaconStarted = await _startBeacon(_generatedUuid);
+
+      if (!beaconStarted) {
+        // If beacon fails, revert attendance status to inactive
+        setState(() {
+          _isAttendanceActive = false;
+        });
+
+        // Send updated status to the server
+        await http.post(
+          Uri.parse('${APIConstants.baseUrl}/attendance_api/update_attendance_status.php'),
+          body: {
+            'class_name': selectedClassName,
+            'subject_code': subjectCode,
+            'lec_type': selectedLectureType,
+            'status': 'inactive',
+          },
+        );
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Failed to start beacon. Attendance deactivated.")),
+        );
+        return;
+      }
+
+      // Update UUID in the database
+      await updateUUID(widget.email, _generatedUuid);
+    } else {
+      // Stop the beacon when deactivating attendance
+      await _stopBeacon();
+    }
+
+    setState(() {
+      _isAttendanceActive = !_isAttendanceActive;
+    });
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(data['message'])),
     );
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(data['message'])),
+    );
+  }
+}
+
+
+  Future<bool> _startBeacon(String uuid) async {
+  try {
+    // Call the platform channel or native code to start the beacon
+    final result = await MethodChannel('com.example.untitled4/rssi')
+        .invokeMethod('startBeacon', {"uuid": uuid});
+    if (result == true) {
+      return true;
+    } else {
+      throw Exception("Beacon not started");
+    }
+  } catch (e) {
+    print("Error starting beacon: $e");
+    return false;
+  }
+}
+
+
+  Future<void> _stopBeacon() async {
+    // Call platform-specific code to stop the beacon
+    // const platform = MethodChannel('com.example.untitled4/rssi');
+    try {
+      await platform.invokeMethod('stopBeacon');
+    } catch (e) {
+      print('Failed to stop beacon: $e');
+    }
+  }
+
+   String _generateUuid() {
+    var uuid = Uuid();
+    return uuid.v4();
   }
 
   @override
@@ -281,9 +388,12 @@ Future<void> updateHotspotSSIDInDatabase(String ssid) async {
                 child: Text(classItem['class_name']),
               );
             }).toList(),
+            
             (value) {
               setState(() {
                 selectedClassId = value;
+                selectedSubjectNameId = null; // Reset dependent dropdown
+                selectedLectureType = null;  // Reset dependent dropdown
                 fetchSubjectNames(value!);
               });
             },
@@ -316,6 +426,7 @@ Future<void> updateHotspotSSIDInDatabase(String ssid) async {
             (value) {
               setState(() {
                 selectedSubjectNameId = value;
+                selectedLectureType = null;  // Reset dependent dropdown
                 fetchLectureTypes(value!);
                 fetchSubjectCode(value);
               });

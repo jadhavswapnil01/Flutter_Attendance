@@ -31,6 +31,7 @@ import android.net.wifi.WifiConfiguration;
 import android.util.Log;
 import android.content.pm.PackageManager;
 import android.content.Intent;
+import android.provider.Settings;
 
 
 
@@ -46,9 +47,10 @@ public class MainActivity extends FlutterActivity {
     private BluetoothLeAdvertiser advertiser;
     private BluetoothLeScanner scanner;
     private static final int REQUEST_ENABLE_BT = 1;
+    private String currentBeaconUUID = null;
 
 
-    private final String BEACON_UUID = "12345678-1234-1234-1234-123456789abc"; // Your beacon UUID
+    // private final String BEACON_UUID = "12345678-1234-1234-1234-123456789abc"; // Your beacon UUID
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,7 +60,10 @@ public class MainActivity extends FlutterActivity {
         BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
         bluetoothAdapter = bluetoothManager.getAdapter();
 
-        
+        if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
+            Toast.makeText(this, "Bluetooth is not enabled", Toast.LENGTH_LONG).show();
+            
+        }
 
         // Initialize advertiser and scanner
         advertiser = bluetoothAdapter.getBluetoothLeAdvertiser();
@@ -97,13 +102,16 @@ public class MainActivity extends FlutterActivity {
                         result.error("ERROR", "Error fetching Hotspot SSID: " + e.getMessage(), null);
                     }
                     } else if (call.method.equals("startBeacon")) {
-                        startBeacon();
-                        result.success(null);
+                        currentBeaconUUID = call.argument("uuid");
+                        // startBeacon();
+                        result.success(startBeacon());
                     } else if (call.method.equals("stopBeacon")) {
+                        
                         stopBeacon();
                         result.success(null);
-                    } else if (call.method.equals("startScanning")) {
-                        startScanning();
+                    } else if (call.method.equals("startScanninguuid")) {
+                        String uuid = call.argument("uuid");
+                        startScanninguuid(uuid); // Pass the UUID to startScanning
                         result.success(null);
                     } else if (call.method.equals("stopScanning")) {
                         stopScanning();
@@ -117,54 +125,156 @@ public class MainActivity extends FlutterActivity {
     
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    public void startBeacon() {
-        if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
-            Toast.makeText(this, "Bluetooth is not enabled please enable it for online attendance", Toast.LENGTH_LONG).show();
-            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-           
+    public boolean startBeacon() {
+        if (!bluetoothAdapter.isEnabled()) {
+            requestBluetoothEnable();
+            Log.e("BeaconError", "Bluetooth is not enabled.");
+            return false;
         }
-        
+    
+        BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
+        bluetoothAdapter = bluetoothManager.getAdapter();
+        advertiser = bluetoothAdapter.getBluetoothLeAdvertiser();
+    
         if (advertiser == null) {
-            Toast.makeText(this, "BLE Advertising not supported", Toast.LENGTH_LONG).show();
-            return;
+            Log.e("BeaconError", "BluetoothLeAdvertiser is null. Check BLE support.");
+            return false;
         }
-
-         // Advertise settings
-         AdvertiseSettings settings = new AdvertiseSettings.Builder()
-         .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
-         .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
-         .setConnectable(false)
-         .build();
-
-        ParcelUuid parcelUuid = ParcelUuid.fromString(BEACON_UUID); // Use your UUID for the beacon
-
-        // Advertise data
+    
+        if (currentBeaconUUID == null || currentBeaconUUID.isEmpty()) {
+            Log.e("BeaconError", "Invalid UUID: " + currentBeaconUUID);
+            return false;
+        }
+    
+        AdvertiseSettings settings = new AdvertiseSettings.Builder()
+                .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
+                .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
+                .setConnectable(false)
+                .build();
+    
+        ParcelUuid parcelUuid = ParcelUuid.fromString(currentBeaconUUID);
+    
         AdvertiseData data = new AdvertiseData.Builder()
                 .addServiceUuid(parcelUuid)
                 .build();
-
-        advertiser.startAdvertising(settings, data, advertiseCallback);
+    
+        try {
+            advertiser.startAdvertising(settings, data, advertiseCallback);
+            Log.d("BeaconStatus", "Beacon advertising started successfully.");
+            return true;
+        } catch (Exception e) {
+            Log.e("BeaconError", "Error starting beacon: " + e.getMessage(), e);
+            return false;
         }
+    }
+    
+
+        // Add this method in your existing MainActivity class
+@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+public void startScanninguuid(String uuid) {
+    if (!bluetoothAdapter.isEnabled()) {
+        requestBluetoothEnable();
+    }
+    BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
+    bluetoothAdapter = bluetoothManager.getAdapter();
+    scanner = bluetoothAdapter.getBluetoothLeScanner();
+    if (scanner == null) {
+        Toast.makeText(this, "BLE Scanning not supported", Toast.LENGTH_LONG).show();
+        return;
+    }
+
+    // Set UUID to scan for
+    ParcelUuid targetUuid = ParcelUuid.fromString(uuid);
+
+    // Scan for 10 seconds
+    scanner.startScan(new ScanCallback() {
+        @Override
+        public void onScanResult(int callbackType, ScanResult result) {
+            super.onScanResult(callbackType, result);
+            BluetoothDevice device = result.getDevice();
+            if (result.getScanRecord() != null &&
+                    result.getScanRecord().getServiceUuids() != null &&
+                    result.getScanRecord().getServiceUuids().contains(targetUuid)) {
+                Toast.makeText(MainActivity.this, "Beacon found: " + device.getAddress(), Toast.LENGTH_SHORT).show();
+
+                // Calculate distance based on RSSI
+                int rssi = result.getRssi();
+                double distance = calculateDistance(rssi);
+                Toast.makeText(MainActivity.this, "Distance: " + distance + " meters", Toast.LENGTH_SHORT).show();
+
+                // Send result back to Flutter
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    new MethodChannel(getFlutterEngine().getDartExecutor(), CHANNEL)
+                            .invokeMethod("onBeaconFound", true);
+                });
+
+                scanner.stopScan(this); // Stop scanning after finding the target
+            }
+        }
+
+        @Override
+        public void onScanFailed(int errorCode) {
+            super.onScanFailed(errorCode);
+            Toast.makeText(MainActivity.this, "Scan failed with error: " + errorCode, Toast.LENGTH_SHORT).show();
+        }
+    });
+
+    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+        if (scanner != null) {
+            scanner.stopScan(scanCallback); // Ensure scanCallback is used
+            Toast.makeText(MainActivity.this, "Scanning stopped", Toast.LENGTH_SHORT).show();
+        }
+        new MethodChannel(getFlutterEngine().getDartExecutor(), CHANNEL)
+            .invokeMethod("onBeaconFound", false);
+    }, 10000);
+}
+
         
         @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
         public void startScanning() {
-            if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
-                Toast.makeText(this, "Bluetooth is not enabled please enable it for online attendance", Toast.LENGTH_LONG).show();
-                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-               
+            if (!bluetoothAdapter.isEnabled()) {
+                requestBluetoothEnable();
             }
-            if (scanner == null) {
-                Toast.makeText(this, "BLE Scanning not supported", Toast.LENGTH_LONG).show();
-                return;
-            }
+            BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
+            bluetoothAdapter = bluetoothManager.getAdapter();
+            scanner = bluetoothAdapter.getBluetoothLeScanner();
+            // if (scanner == null) {
+            //     Toast.makeText(this, "BLE Scanning not supported", Toast.LENGTH_LONG).show();
+            //     return;
+            // }
     
             scanner.startScan(scanCallback);
     
             // Stop scanning after 10 seconds
             new Handler(Looper.getMainLooper()).postDelayed(() -> scanner.stopScan(scanCallback), 10000);
     
+        }
+
+        private void requestBluetoothEnable() {
+            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.R) {
+                // For Android 11 and below
+                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+            } else {
+                // For Android 12 and above
+                if (!bluetoothAdapter.isEnabled()) {
+                    Intent intent = new Intent(Settings.ACTION_BLUETOOTH_SETTINGS);
+                    startActivity(intent);
+                    Toast.makeText(this, "Please enable Bluetooth manually for this feature to work.", Toast.LENGTH_LONG).show();
+                }
+            }
+        }
+    
+        protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+            super.onActivityResult(requestCode, resultCode, data);
+        
+            if (requestCode == REQUEST_ENABLE_BT) {
+                if (resultCode == Activity.RESULT_OK) {
+                    Toast.makeText(this, "Bluetooth enabled successfully", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, "Bluetooth enabling was denied", Toast.LENGTH_SHORT).show();
+                }
+            }
         }
 
         private void stopBeacon() {
@@ -175,8 +285,8 @@ public class MainActivity extends FlutterActivity {
         }
     
         private void stopScanning() {
-            if (scanner != null) {
-                scanner.stopScan(scanCallback);
+            if (scanner != null && scanCallback != null) {
+                scanner.stopScan(scanCallback); // Use the correct ScanCallback instance
                 Toast.makeText(this, "Scanning stopped", Toast.LENGTH_SHORT).show();
             }
         }
@@ -201,17 +311,26 @@ public class MainActivity extends FlutterActivity {
                 super.onScanResult(callbackType, result);
                 BluetoothDevice device = result.getDevice();
                 if (result.getScanRecord() != null &&
-                        result.getScanRecord().getServiceUuids() != null &&
-                        result.getScanRecord().getServiceUuids().contains(ParcelUuid.fromString(BEACON_UUID))) {
+                    result.getScanRecord().getServiceUuids() != null &&
+                    result.getScanRecord().getServiceUuids().contains(ParcelUuid.fromString(currentBeaconUUID))) {
                     Toast.makeText(MainActivity.this, "Beacon found: " + device.getAddress(), Toast.LENGTH_SHORT).show();
-    
+        
                     // Calculate distance based on RSSI
                     int rssi = result.getRssi();
                     double distance = calculateDistance(rssi);
                     Toast.makeText(MainActivity.this, "Distance: " + distance + " meters", Toast.LENGTH_SHORT).show();
+        
+                    scanner.stopScan(this); // Stop scanning
                 }
             }
+        
+            @Override
+            public void onScanFailed(int errorCode) {
+                super.onScanFailed(errorCode);
+                Toast.makeText(MainActivity.this, "Scan failed with error: " + errorCode, Toast.LENGTH_SHORT).show();
+            }
         };
+        
 
         private double calculateDistance(int rssi) {
             int txPower = -59; // Assumed TX power at 1m distance
