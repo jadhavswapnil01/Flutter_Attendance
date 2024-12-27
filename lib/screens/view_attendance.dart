@@ -35,9 +35,10 @@ class _ViewAttendanceState extends State<ViewAttendance> {
   static const platform = MethodChannel('com.example.untitled4/rssi');
   bool isAttendanceActive = false;
   bool isLoading = true;
-   String? ssid;
+  String? ssid;
   late int classroomId;
   List<dynamic> attendanceInfo = [];
+  String? uuidBluetooth;
 
   @override
   void initState() {
@@ -52,13 +53,14 @@ class _ViewAttendanceState extends State<ViewAttendance> {
     // fetchClassroomStatus();
     // print(widget.classroomId);
     // print(classroomId);
-    final response = await http.get(Uri.parse('${APIConstants.baseUrl}/attendance_api/fetch_ssid_student.php?classroom_id=$classroomId'));
+    final response = await http.get(Uri.parse('${APIConstants.baseUrl}/attendance_api/fetch_ssid_Buuid_student.php?classroom_id=$classroomId'));
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       // if (data['success']) {
         setState(() {
           ssid = data['ssid'];
+          uuidBluetooth = data['uuidBluetooth'];
           // print(ssid);
         });
       // } else {
@@ -95,6 +97,22 @@ class _ViewAttendanceState extends State<ViewAttendance> {
       showError('Failed to fetch classroom status');
     }
   }
+
+  Future<bool> _startScanning(String uuid) async {
+  try {
+    // Call the platform channel or native code to start the beacon
+    final result = await MethodChannel('com.example.untitled4/rssi')
+        .invokeMethod('startScanninguuid', {"uuid": uuid});
+    if (result == true) {
+      return true;
+    } else {
+      throw Exception("Scanning not started");
+    }
+  } catch (e) {
+    // print("Error starting Scanning: $e");
+    return false;
+  }
+}
 
   Future<double> calculateAverageDistance(String ssid) async {
     List<int> rssiValues = [];
@@ -172,6 +190,13 @@ class _ViewAttendanceState extends State<ViewAttendance> {
 
   Future<void> markAttendanceWithRSSI(String ssid) async {
   // Check if the provided UUID exists in the database
+  if(await _startScanning(uuidBluetooth!)){
+    // print("Scanning started uuid: $uuidBluetooth");
+
+  }else{
+    // print("Scanning not started");
+    return;
+  }
   bool uuidExists = await DatabaseHelper.doesUuidExist(widget.uuid!);
   if (!uuidExists) {
     showError('Loged in from another device. Attendance not allowed.');
@@ -205,7 +230,7 @@ class _ViewAttendanceState extends State<ViewAttendance> {
 
     if (response.statusCode == 200) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Attendance marked successfully! ')),
+        const SnackBar(content: Text('Attendance marked successfully!')),
       );
 
       // Fetch updated attendance info after successful marking

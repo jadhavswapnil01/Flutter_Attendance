@@ -111,8 +111,8 @@ public class MainActivity extends FlutterActivity {
                         result.success(null);
                     } else if (call.method.equals("startScanninguuid")) {
                         String uuid = call.argument("uuid");
-                        startScanninguuid(uuid); // Pass the UUID to startScanning
-                        result.success(null);
+                         // Pass the UUID to startScanning
+                        result.success(startScanninguuid(uuid));
                     } else if (call.method.equals("stopScanning")) {
                         stopScanning();
                         result.success(null);
@@ -171,16 +171,17 @@ public class MainActivity extends FlutterActivity {
 
         // Add this method in your existing MainActivity class
 @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-public void startScanninguuid(String uuid) {
+public boolean startScanninguuid(String uuid) {
     if (!bluetoothAdapter.isEnabled()) {
         requestBluetoothEnable();
+        return false;
     }
     BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
     bluetoothAdapter = bluetoothManager.getAdapter();
     scanner = bluetoothAdapter.getBluetoothLeScanner();
     if (scanner == null) {
         Toast.makeText(this, "BLE Scanning not supported", Toast.LENGTH_LONG).show();
-        return;
+        return false;
     }
 
     // Set UUID to scan for
@@ -195,19 +196,19 @@ public void startScanninguuid(String uuid) {
             if (result.getScanRecord() != null &&
                     result.getScanRecord().getServiceUuids() != null &&
                     result.getScanRecord().getServiceUuids().contains(targetUuid)) {
-                Toast.makeText(MainActivity.this, "Beacon found: " + device.getAddress(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "You Are Near Classroom", Toast.LENGTH_SHORT).show();
 
                 // Calculate distance based on RSSI
                 int rssi = result.getRssi();
                 double distance = calculateDistance(rssi);
-                Toast.makeText(MainActivity.this, "Distance: " + distance + " meters", Toast.LENGTH_SHORT).show();
+                // Toast.makeText(MainActivity.this, "Distance: " + distance + " meters", Toast.LENGTH_SHORT).show();
 
                 // Send result back to Flutter
                 new Handler(Looper.getMainLooper()).post(() -> {
                     new MethodChannel(getFlutterEngine().getDartExecutor(), CHANNEL)
                             .invokeMethod("onBeaconFound", true);
                 });
-
+                
                 scanner.stopScan(this); // Stop scanning after finding the target
             }
         }
@@ -216,6 +217,7 @@ public void startScanninguuid(String uuid) {
         public void onScanFailed(int errorCode) {
             super.onScanFailed(errorCode);
             Toast.makeText(MainActivity.this, "Scan failed with error: " + errorCode, Toast.LENGTH_SHORT).show();
+            
         }
     });
 
@@ -227,6 +229,8 @@ public void startScanninguuid(String uuid) {
         new MethodChannel(getFlutterEngine().getDartExecutor(), CHANNEL)
             .invokeMethod("onBeaconFound", false);
     }, 10000);
+    // Log.e("startscanninguuid_ended", "end of startscanninguuid");
+    return true;
 }
 
         

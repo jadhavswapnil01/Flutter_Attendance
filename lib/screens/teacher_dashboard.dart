@@ -226,18 +226,18 @@ Future<void> updateHotspotSSIDInDatabase(String ssid) async {
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       if (data['success'] == true) {
-        print("UUID updated successfully.");
+        // print("UUID updated successfully.");
         return true;
       } else {
-        print("Error: ${data['message']}");
+        // print("Error: ${data['message']}");
         return false;
       }
     } else {
-      print("Server error: ${response.statusCode}");
+      // print("Server error: ${response.statusCode}");
       return false;
     }
   } catch (e) {
-    print("Exception occurred: $e");
+    // print("Exception occurred: $e");
     return false;
   }
 }
@@ -310,16 +310,18 @@ Future<void> updateHotspotSSIDInDatabase(String ssid) async {
 
   Future<bool> _startBeacon(String uuid) async {
   try {
+    
     // Call the platform channel or native code to start the beacon
     final result = await MethodChannel('com.example.untitled4/rssi')
         .invokeMethod('startBeacon', {"uuid": uuid});
     if (result == true) {
+      // print(uuid);
       return true;
     } else {
       throw Exception("Beacon not started");
     }
   } catch (e) {
-    print("Error starting beacon: $e");
+    // print("Error starting beacon: $e");
     return false;
   }
 }
@@ -331,7 +333,7 @@ Future<void> updateHotspotSSIDInDatabase(String ssid) async {
     try {
       await platform.invokeMethod('stopBeacon');
     } catch (e) {
-      print('Failed to stop beacon: $e');
+      // print('Failed to stop beacon: $e');
     }
   }
 
