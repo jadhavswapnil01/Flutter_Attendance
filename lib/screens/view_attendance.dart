@@ -98,20 +98,24 @@ class _ViewAttendanceState extends State<ViewAttendance> {
     }
   }
 
-  Future<bool> _startScanning(String uuid) async {
-  try {
-    // Call the platform channel or native code to start the beacon
-    final result = await MethodChannel('com.example.untitled4/rssi')
-        .invokeMethod('startScanninguuid', {"uuid": uuid});
-    if (result == true) {
-      return true;
-    } else {
-      throw Exception("Scanning not started");
+   Future<bool> _startScanning(String uuid) async {
+  final MethodChannel channel = MethodChannel('com.example.untitled4/rssi');
+  final Completer<bool> completer = Completer<bool>();
+
+  channel.setMethodCallHandler((MethodCall call) async {
+    if (call.method == 'onBeaconFound') {
+      final bool result = call.arguments as bool;
+      completer.complete(result);
     }
+  });
+
+  try {
+    await channel.invokeMethod('startScanninguuid', {"uuid": uuid});
   } catch (e) {
-    // print("Error starting Scanning: $e");
-    return false;
+    completer.completeError(e);
   }
+
+  return completer.future;
 }
 
   Future<double> calculateAverageDistance(String ssid) async {
@@ -190,31 +194,31 @@ class _ViewAttendanceState extends State<ViewAttendance> {
 
   Future<void> markAttendanceWithRSSI(String ssid) async {
   // Check if the provided UUID exists in the database
-  if(await _startScanning(uuidBluetooth!)){
-    // print("Scanning started uuid: $uuidBluetooth");
-
-  }else{
-    // print("Scanning not started");
-    return;
-  }
   bool uuidExists = await DatabaseHelper.doesUuidExist(widget.uuid!);
-  if (!uuidExists) {
-    showError('Loged in from another device. Attendance not allowed.');
-    return;
-  }
-
+  if (uuidExists) {
+  // Cheak if student is in classroom 
+  bool isFounded=await _startScanning(uuidBluetooth!);
+  if(isFounded){
   // Calculate the average distance using RSSI
   final averageDistance = await calculateAverageDistance(ssid);
   if (averageDistance == double.infinity || averageDistance == 0) {
-    showError('Invalid RSSI or distance detected. Ensure Wi-Fi is enabled.');
+    showError('Invalid distance detected. Ensure Wi-Fi is enabled.');
     return;
   }
 
   // Check if the student is within the valid range to mark attendance
-  if (averageDistance <= 1.7) {
+  if (averageDistance <= 2.2) {
     markAttendance();
   } else {
     showError('You are far away from the teacher.');
+  }
+  }else{
+    showError('You Are Not In The Classroom');
+    return;
+  }
+  }else{
+    showError('Loged in from another device. Attendance not allowed.');
+    return;
   }
 }
 
