@@ -32,13 +32,14 @@ class ViewAttendance extends StatefulWidget {
 }
 
 class _ViewAttendanceState extends State<ViewAttendance> {
-  static const platform = MethodChannel('com.example.untitled4/rssi');
+  // static const platform = MethodChannel('com.example.untitled4/lowlet_hightx');
   bool isAttendanceActive = false;
   bool isLoading = true;
   String? ssid;
   late int classroomId;
   List<dynamic> attendanceInfo = [];
   String? uuidBluetooth;
+  // bool _beaconStatus;
 
   @override
   void initState() {
@@ -49,10 +50,7 @@ class _ViewAttendanceState extends State<ViewAttendance> {
   }
 
    Future<void> fetchSSID(int classroomId) async {
-    // print(classroomId);
-    // fetchClassroomStatus();
-    // print(widget.classroomId);
-    // print(classroomId);
+    
     final response = await http.get(Uri.parse('${APIConstants.baseUrl}/attendance_api/fetch_ssid_Buuid_student.php?classroom_id=$classroomId'));
 
     if (response.statusCode == 200) {
@@ -61,19 +59,16 @@ class _ViewAttendanceState extends State<ViewAttendance> {
         setState(() {
           ssid = data['ssid'];
           uuidBluetooth = data['uuidBluetooth'];
+          // print(uuidBluetooth);
           // print(ssid);
         });
-      // } else {
-        // ScaffoldMessenger.of(context).showSnackBar(
-        //   SnackBar(content: Text(data['message'] ?? 'Failed to fetch SSID.')),
-        // );
+      
       }
-    // } else {
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     SnackBar(content: Text('Server error. Please try again later.')),
-    //   );
-    // }
+    
   }
+
+
+  
 
   Future<void> fetchClassroomStatus() async {
     final response = await http.post(
@@ -98,61 +93,28 @@ class _ViewAttendanceState extends State<ViewAttendance> {
     }
   }
 
-  Future<bool> _startScanning(String uuid) async {
+ Future<bool> _startScanning(String uuid) async {
+  final MethodChannel channel = MethodChannel('com.example.untitled4/lowlet_hightxi');
+  final Completer<bool> completer = Completer<bool>();
+
+  channel.setMethodCallHandler((MethodCall call) async {
+    if (call.method == 'onBeaconFound') {
+      final bool result = call.arguments as bool;
+      completer.complete(result);
+    }
+  });
+
   try {
-    // Call the platform channel or native code to start the beacon
-    final result = await MethodChannel('com.example.untitled4/rssi')
-        .invokeMethod('startScanninguuid', {"uuid": uuid});
-    if (result == true) {
-      return true;
-    } else {
-      throw Exception("Scanning not started");
-    }
+    await channel.invokeMethod('startScanninguuid', {"uuid": uuid});
   } catch (e) {
-    // print("Error starting Scanning: $e");
-    return false;
+    completer.completeError(e);
   }
+
+  return completer.future;
 }
 
-  Future<double> calculateAverageDistance(String ssid) async {
-    List<int> rssiValues = [];
-    try {
-      for (int i = 0; i < 4; i++) {
-        try{final rssi = await platform.invokeMethod<int>('getRSSI', {'ssid': ssid});
 
-        
-        if (rssi != null) {
-          rssiValues.add(rssi);
-        }
-        await Future.delayed(const Duration(milliseconds: 1000));
-      }on PlatformException catch (e) {
-      showError('Failed to fetch RSSI: ${e.message},  Turn on Wi-Fi / get closer to the teacher and try again.');
-      break;
-      }
-      }
-    
-      // Convert RSSI to distance (simplified path loss model example)
-      double distanceSum = 0;
-      for (var rssi in rssiValues) {
-        double distance = calculateDistanceFromRSSI(rssi);
-        distanceSum += distance;
-      }
-
-      return distanceSum / rssiValues.length;
-    } catch (e) {
-      showError('Error fetching RSSI values: $e');
-      return double.infinity;
-    }
-  }
-
-  double calculateDistanceFromRSSI(int rssi) {
-  // Example calculation (adjust according to your requirements)
-  const double txPower = -59; // Reference RSSI value at 1 meter (modify if needed)
-  if (rssi == 0) {
-    return double.infinity; // Signal lost or not measurable
-  }
-  return pow(10, (txPower - rssi) / (10 * 2)).toDouble();
-}
+  
 
   Future<void> fetchAttendanceInfo() async {
     try {
@@ -188,35 +150,30 @@ class _ViewAttendanceState extends State<ViewAttendance> {
     }
   }
 
-  Future<void> markAttendanceWithRSSI(String ssid) async {
-  // Check if the provided UUID exists in the database
-  if(await _startScanning(uuidBluetooth!)){
-    // print("Scanning started uuid: $uuidBluetooth");
-
-  }else{
-    // print("Scanning not started");
-    return;
-  }
-  bool uuidExists = await DatabaseHelper.doesUuidExist(widget.uuid!);
-  if (!uuidExists) {
-    showError('Loged in from another device. Attendance not allowed.');
-    return;
-  }
-
-  // Calculate the average distance using RSSI
-  final averageDistance = await calculateAverageDistance(ssid);
-  if (averageDistance == double.infinity || averageDistance == 0) {
-    showError('Invalid RSSI or distance detected. Ensure Wi-Fi is enabled.');
-    return;
-  }
-
-  // Check if the student is within the valid range to mark attendance
-  if (averageDistance <= 1.7) {
-    markAttendance();
+Future<void> markAttendanceWithRSSI(String ssid) async {
+  
+  final bool uuidExists = await DatabaseHelper.doesUuidExist(widget.uuid!);
+  if (uuidExists) {
+      
+    final bool foundUUID = await _startScanning(uuidBluetooth!);
+    if(foundUUID) {
+    
+     // Mark attendance
+      markAttendance();
+    
+    }else{
+      
+      showError('You Are Not In Classroom');
+      return;
+    }
+  
   } else {
-    showError('You are far away from the teacher.');
+    
+    showError('Logged in from another device. Attendance not allowed.');
+    return;
   }
 }
+
 
 
   Future<void> markAttendance() async {
@@ -345,7 +302,7 @@ class _ViewAttendanceState extends State<ViewAttendance> {
                                       ? const Text(
                                           'Online attendance active for this record.',
                                           style: TextStyle(
-                                            color: Colors.blue,
+                                            color: Colors.green,
                                             fontWeight: FontWeight.bold,
                                           ),
                                         )
