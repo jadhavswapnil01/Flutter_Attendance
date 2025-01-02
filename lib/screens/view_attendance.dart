@@ -1,5 +1,6 @@
 import 'dart:convert';
-import 'dart:ffi';
+// import 'dart:ffi';
+import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -7,7 +8,13 @@ import 'constants.dart';
 import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:untitled4/screens/background_scaffold.dart';
-import 'package:untitled4/helpers/database_helper.dart';
+// import 'package:untitled4/helpers/database_helper.dart';
+// import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:untitled4/screens/student_dashboard.dart';
+import 'package:image/image.dart' as img;
+
 
 
 class ViewAttendance extends StatefulWidget {
@@ -94,7 +101,7 @@ class _ViewAttendanceState extends State<ViewAttendance> {
   }
 
  Future<bool> _startScanning(String uuid) async {
-  final MethodChannel channel = MethodChannel('com.example.untitled4/lowlet_hightxi');
+  final MethodChannel channel = MethodChannel('com.example.untitled4/lowlet_hightx');
   final Completer<bool> completer = Completer<bool>();
 
   channel.setMethodCallHandler((MethodCall call) async {
@@ -150,29 +157,157 @@ class _ViewAttendanceState extends State<ViewAttendance> {
     }
   }
 
-Future<void> markAttendanceWithRSSI(String ssid) async {
+  Future<List<int>> compressImage(File image, {int maxSizeKB = 500}) async {
+  final bytes = await image.readAsBytes();
+  final originalImage = img.decodeImage(bytes);
+
+  if (originalImage == null) {
+    throw Exception("Failed to decode the image.");
+  }
+
+  // Downscale the image dimensions
+  final int maxDimension = 1024; // Set max dimension for width/height
+  img.Image resizedImage = img.copyResize(
+    originalImage,
+    width: originalImage.width > originalImage.height ? maxDimension : null,
+    height: originalImage.height > originalImage.width ? maxDimension : null,
+  );
+
+  // Compress the image to JPG format
+  int quality = 85; // Set default quality
+  List<int> compressedBytes = img.encodeJpg(resizedImage, quality: quality);
+
+  // Final check for size, and return even if it's slightly larger
+  if (compressedBytes.length > maxSizeKB * 1024) {
+    debugPrint("Compressed image size exceeds target but will be used.");
+  }
+
+  return compressedBytes;
+}
+
+
+ Future<bool> authenticateFace(BuildContext context, String uuid) async {
+  final ImagePicker picker = ImagePicker();
+  final XFile? pickedFile = await picker.pickImage(source: ImageSource.camera);
+
+  if (pickedFile == null) {
+    return false; // No image captured
+  }
+
+  final File image = File(pickedFile.path);
+
+  // Show loading indicator
+  // showDialog(
+  //   context: context,
+  //   barrierDismissible: false,
+  //   builder: (_) => const Center(child: CircularProgressIndicator()),
+  // );
   
-  final bool uuidExists = await DatabaseHelper.doesUuidExist(widget.uuid!);
-  if (uuidExists) {
-      
-    final bool foundUUID = await _startScanning(uuidBluetooth!);
-    if(foundUUID) {
+showLoadingIndicator(context);
+  
+  try {
+    final compressedBytes = await compressImage(image);
+    final faceImage = base64Encode(compressedBytes);
+
+    final response = await http.post(
+      Uri.parse('${APIConstants.baseUrl}/attendance_api/verify_face.php'),
+      body: {
+        'uuid': uuid,
+        'face_image': faceImage,
+      },
+    );
+
+    // Navigator.of(context).pop(); // Dismiss the loading indicator
+
+    if (response.statusCode == 200) {
+      final result = jsonDecode(response.body);
+      return result['match'] == true;
+    } else {
+      return false;
+    }
+  } catch (e) {
+    // Navigator.of(context).pop(); // Dismiss the loading indicator
+    showError("Error during face authentication: $e");
+    return false;
+  }finally{
     
-     // Mark attendance
+    hideLoadingIndicator(context);
+    
+  }
+}
+
+void showLoadingIndicator(BuildContext context) {
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) => const Center(child: CircularProgressIndicator()),
+  );
+}
+
+void hideLoadingIndicator(BuildContext context) {
+  Navigator.of(context, rootNavigator: true).pop();
+}
+
+
+
+
+double calculateFaceDistance(Map<String, dynamic> face1, Map<String, dynamic> face2) {
+  final double dx = face1["centerX"] - face2["centerX"];
+  final double dy = face1["centerY"] - face2["centerY"];
+  return sqrt(dx * dx + dy * dy);
+}
+
+ void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+Future<bool> _requestCameraPermission() async {
+    PermissionStatus status = await Permission.camera.request();
+    if (status.isGranted) {
+      return true;
+    } else {
+      _showSnackBar('Camera permission is required to proceed.');
+      return false;
+    }
+  }
+
+
+Future<void> markAttendanceWithRSSI(String ssid) async {
+
+   bool hasPermission = await _requestCameraPermission();
+      if (!hasPermission) return; // Don't proceed if permission is not granted
+  
+//  print(uuidBluetooth);  
+   final bool foundUUID = await _startScanning(uuidBluetooth!);
+  //  print(foundUUID);  
+  if (foundUUID) {
+
+    final bool faceVerified = await authenticateFace(context,widget.uuid!);
+    if (faceVerified) {
       markAttendance();
     
     }else{
-      
-      showError('You Are Not In Classroom');
+     
+     showError('Face authentication failed');
       return;
     }
-  
+
   } else {
     
-    showError('Logged in from another device. Attendance not allowed.');
+    showError('You Are Not In The Classroom');
     return;
   }
 }
+
+ void _handleBackPress() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => StudentDashboard(uuid: widget.uuid!),
+      ),
+    );
+  }
+
 
 
 
@@ -208,8 +343,12 @@ Future<void> markAttendanceWithRSSI(String ssid) async {
     final lastAttendance = attendanceInfo.isNotEmpty ? attendanceInfo.last : null;
     final isLastAttendancePresent =
         lastAttendance != null && lastAttendance['status'] == 'P';
-
-    return BackgroundScaffold(
+ return WillPopScope(
+      onWillPop: () async {
+        _handleBackPress();
+        return false; // Prevent default back action
+      },
+      child: BackgroundScaffold(
       // appBar: AppBar(
       //   title: const Text('Attendance Details'),
       //   backgroundColor: const Color(0xFF1976D2),
@@ -338,6 +477,7 @@ Future<void> markAttendanceWithRSSI(String ssid) async {
               splashColor: Colors.purpleAccent,
             )
           : null,
-    );
+    ),
+ );
   }
 }

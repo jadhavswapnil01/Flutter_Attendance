@@ -316,7 +316,7 @@ public class MainActivity extends FlutterActivity {
         
         // Helper to send scan results to Flutter
         private void sendScanResultToFlutter(boolean result) {
-    new MethodChannel(getFlutterEngine().getDartExecutor(), "com.example.untitled4/rssi")
+    new MethodChannel(getFlutterEngine().getDartExecutor(), "com.example.untitled4/lowlet_hightx")
             .invokeMethod("onBeaconFound", result);
 }
 

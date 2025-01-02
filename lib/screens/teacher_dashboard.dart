@@ -24,7 +24,7 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
   final TextEditingController _subjectcodeController = TextEditingController();
   final PageController _pageController = PageController();
   final TextEditingController _ssidController = TextEditingController();
-  static const platform = MethodChannel('com.example.untitled4/lowlet_hightx');
+  // static const platform = MethodChannel('com.example.untitled4/lowlet_hightx');
   late String _generatedUuid;
    String? _selectedChannel; 
 
@@ -269,7 +269,8 @@ Future<void> updateHotspotSSIDInDatabase(String ssid) async {
     if (data['success']) {
       if (!_isAttendanceActive) {
         _generatedUuid = _generateUuid();
-        final beaconStarted = await _startBeacon(_selectedChannel!, _generatedUuid!);
+        print(_generatedUuid);
+        final beaconStarted = await _startBeacon(_selectedChannel!, _generatedUuid);
 
         if (!beaconStarted) {
           await http.post(

@@ -63,11 +63,12 @@ class HomeScreen extends StatelessWidget {
         child: Center(
           child: SingleChildScrollView(
             child: Padding(
+              
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 130),
                   const Icon(
                     Icons.school_rounded,
                     size: 120,
@@ -105,8 +106,11 @@ class HomeScreen extends StatelessWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 75),
-                  ..._buildButtonList(context),
+                  const SizedBox(height: 85),
+                  SizedBox(
+                    height: 500, // Adjust height as needed
+                    child: _buildButtonGrid(context),
+                  ),
                   
                 ],
                 
@@ -124,48 +128,17 @@ class HomeScreen extends StatelessWidget {
     
   }
 
-  List<Widget> _buildButtonList(BuildContext context) {
-     
+  Widget _buildButtonGrid(BuildContext context) {
     final buttonData = [
-      
       {
-        'text': RichText(
-          text: const TextSpan(
-            children: [
-              TextSpan(
-                text: 'Student',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF673AB7),
-                ),
-              ),
-              TextSpan(
-                text: ' Regis',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF673AB7),
-                ),
-              ),
-              TextSpan(
-                text: 'ter',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF673AB7),
-                ),
-              ),
-            ],
-          ),
-        ),
+        'text': 'Student Register',
         'icon': Icons.person_add_alt_1,
         'onPressed': () {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => StudentRegister()),
           );
-        }
+        },
       },
       {
         'text': 'Student Login',
@@ -175,7 +148,7 @@ class HomeScreen extends StatelessWidget {
             context,
             MaterialPageRoute(builder: (_) => const StudentLogin()),
           );
-        }
+        },
       },
       {
         'text': 'Teacher Register',
@@ -185,7 +158,7 @@ class HomeScreen extends StatelessWidget {
             context,
             MaterialPageRoute(builder: (_) => TeacherRegister()),
           );
-        }
+        },
       },
       {
         'text': 'Teacher Login',
@@ -195,7 +168,7 @@ class HomeScreen extends StatelessWidget {
             context,
             MaterialPageRoute(builder: (_) => TeacherLogin()),
           );
-        }
+        },
       },
       {
         'text': 'Add Classes',
@@ -205,7 +178,7 @@ class HomeScreen extends StatelessWidget {
             context,
             MaterialPageRoute(builder: (_) => AddClassScreen()),
           );
-        }
+        },
       },
       {
         'text': 'Students List',
@@ -215,55 +188,81 @@ class HomeScreen extends StatelessWidget {
             context,
             MaterialPageRoute(builder: (_) => const StudentsList()),
           );
-        }
+        },
       },
     ];
 
-    return buttonData
-        .map((button) => Padding(
-              padding: const EdgeInsets.only(bottom: 15),
-              child: GestureDetector(
-                onTap: button['onPressed'] as VoidCallback,
-                child: Container(
-                  height: 60,
-                  decoration: BoxDecoration(
-                    color: const Color.fromARGB(0, 184, 89, 213),
-                    border: Border.all(
-                        color: const Color.fromARGB(255, 0, 0, 0), width: 1.5),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color:
-                            const Color.fromARGB(255, 0, 0, 0).withOpacity(0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(button['icon'] as IconData,
-                          color: const Color(0xFF673AB7)),
-                      const SizedBox(width: 10),
-                      button['text'] is String
-                          ? Text(
-                              button['text'] as String,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF673AB7),
-                              ),
-                            )
-                          : button['text'] as Widget,
-                    ],
-                  ),
-                ),
-              ),
-            ))
-        .toList();
+    return GridView.builder(
+      itemCount: buttonData.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2, // Number of columns
+        crossAxisSpacing: 16.0, // Horizontal spacing between buttons
+        mainAxisSpacing: 16.0, // Vertical spacing between buttons
+        childAspectRatio: 1.7, // Width to height ratio of each button
+      ),
+      itemBuilder: (context, index) {
+        final button = buttonData[index];
+        return _buildGridButton(
+          context,
+          text: button['text'] as String,
+          icon: button['icon'] as IconData,
+          onPressed: button['onPressed'] as VoidCallback,
+        );
+      },
+    );
   }
+
+  // Function to build individual grid buttons
+  Widget _buildGridButton(BuildContext context,
+    {required String text,
+    required IconData icon,
+    required VoidCallback onPressed}) {
+  return InkWell(
+    onTap: onPressed,
+    borderRadius: BorderRadius.circular(15),
+    splashColor: const Color(0xFF673AB7).withAlpha(50),
+    child: Container(
+      decoration: BoxDecoration(
+        color: Colors.transparent,
+        border: Border.all(color: const Color(0xFF673AB7), width: 1.5),
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(22),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            icon,
+            size: 25, // Reduced size for the icon
+            color: const Color(0xFF673AB7),
+          ),
+          const SizedBox(height: 4), // Reduced spacing
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: Text(
+              text,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 14, // Reduced font size
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF673AB7),
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }
+
+}
+
 
 class StudentsList extends StatelessWidget {
   const StudentsList({super.key});
