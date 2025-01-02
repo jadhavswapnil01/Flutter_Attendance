@@ -1,5 +1,6 @@
 import 'dart:convert';
-import 'dart:ffi';
+// import 'dart:ffi';
+import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -7,7 +8,13 @@ import 'constants.dart';
 import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:untitled4/screens/background_scaffold.dart';
-import 'package:untitled4/helpers/database_helper.dart';
+// import 'package:untitled4/helpers/database_helper.dart';
+// import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:untitled4/screens/student_dashboard.dart';
+import 'package:image/image.dart' as img;
+
 
 
 class ViewAttendance extends StatefulWidget {
@@ -32,13 +39,14 @@ class ViewAttendance extends StatefulWidget {
 }
 
 class _ViewAttendanceState extends State<ViewAttendance> {
-  static const platform = MethodChannel('com.example.untitled4/rssi');
+  // static const platform = MethodChannel('com.example.untitled4/lowlet_hightx');
   bool isAttendanceActive = false;
   bool isLoading = true;
   String? ssid;
   late int classroomId;
   List<dynamic> attendanceInfo = [];
   String? uuidBluetooth;
+  // bool _beaconStatus;
 
   @override
   void initState() {
@@ -49,10 +57,7 @@ class _ViewAttendanceState extends State<ViewAttendance> {
   }
 
    Future<void> fetchSSID(int classroomId) async {
-    // print(classroomId);
-    // fetchClassroomStatus();
-    // print(widget.classroomId);
-    // print(classroomId);
+    
     final response = await http.get(Uri.parse('${APIConstants.baseUrl}/attendance_api/fetch_ssid_Buuid_student.php?classroom_id=$classroomId'));
 
     if (response.statusCode == 200) {
@@ -61,19 +66,16 @@ class _ViewAttendanceState extends State<ViewAttendance> {
         setState(() {
           ssid = data['ssid'];
           uuidBluetooth = data['uuidBluetooth'];
+          // print(uuidBluetooth);
           // print(ssid);
         });
-      // } else {
-        // ScaffoldMessenger.of(context).showSnackBar(
-        //   SnackBar(content: Text(data['message'] ?? 'Failed to fetch SSID.')),
-        // );
+      
       }
-    // } else {
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     SnackBar(content: Text('Server error. Please try again later.')),
-    //   );
-    // }
+    
   }
+
+
+  
 
   Future<void> fetchClassroomStatus() async {
     final response = await http.post(
@@ -98,8 +100,13 @@ class _ViewAttendanceState extends State<ViewAttendance> {
     }
   }
 
-   Future<bool> _startScanning(String uuid) async {
-  final MethodChannel channel = MethodChannel('com.example.untitled4/rssi');
+// <<<<<<< Flutter_Attendance_Bluetooth_Only
+ Future<bool> _startScanning(String uuid) async {
+  final MethodChannel channel = MethodChannel('com.example.untitled4/lowlet_hightx');
+// =======
+//    Future<bool> _startScanning(String uuid) async {
+//   final MethodChannel channel = MethodChannel('com.example.untitled4/rssi');
+// >>>>>>> main
   final Completer<bool> completer = Completer<bool>();
 
   channel.setMethodCallHandler((MethodCall call) async {
@@ -114,49 +121,24 @@ class _ViewAttendanceState extends State<ViewAttendance> {
   } catch (e) {
     completer.completeError(e);
   }
+// <<<<<<< Flutter_Attendance_Bluetooth_Only
+// =======
+
+//   return completer.future;
+// }
+
+//   Future<double> calculateAverageDistance(String ssid) async {
+//     List<int> rssiValues = [];
+//     try {
+//       for (int i = 0; i < 4; i++) {
+//         try{final rssi = await platform.invokeMethod<int>('getRSSI', {'ssid': ssid});
+// >>>>>>> main
 
   return completer.future;
 }
 
-  Future<double> calculateAverageDistance(String ssid) async {
-    List<int> rssiValues = [];
-    try {
-      for (int i = 0; i < 4; i++) {
-        try{final rssi = await platform.invokeMethod<int>('getRSSI', {'ssid': ssid});
 
-        
-        if (rssi != null) {
-          rssiValues.add(rssi);
-        }
-        await Future.delayed(const Duration(milliseconds: 1000));
-      }on PlatformException catch (e) {
-      showError('Failed to fetch RSSI: ${e.message},  Turn on Wi-Fi / get closer to the teacher and try again.');
-      break;
-      }
-      }
-    
-      // Convert RSSI to distance (simplified path loss model example)
-      double distanceSum = 0;
-      for (var rssi in rssiValues) {
-        double distance = calculateDistanceFromRSSI(rssi);
-        distanceSum += distance;
-      }
-
-      return distanceSum / rssiValues.length;
-    } catch (e) {
-      showError('Error fetching RSSI values: $e');
-      return double.infinity;
-    }
-  }
-
-  double calculateDistanceFromRSSI(int rssi) {
-  // Example calculation (adjust according to your requirements)
-  const double txPower = -59; // Reference RSSI value at 1 meter (modify if needed)
-  if (rssi == 0) {
-    return double.infinity; // Signal lost or not measurable
-  }
-  return pow(10, (txPower - rssi) / (10 * 2)).toDouble();
-}
+  
 
   Future<void> fetchAttendanceInfo() async {
     try {
@@ -192,25 +174,165 @@ class _ViewAttendanceState extends State<ViewAttendance> {
     }
   }
 
-  Future<void> markAttendanceWithRSSI(String ssid) async {
-  // Check if the provided UUID exists in the database
-  bool uuidExists = await DatabaseHelper.doesUuidExist(widget.uuid!);
-  if (uuidExists) {
-  // Cheak if student is in classroom 
-  bool isFounded=await _startScanning(uuidBluetooth!);
-  if(isFounded){
-  // Calculate the average distance using RSSI
-  final averageDistance = await calculateAverageDistance(ssid);
-  if (averageDistance == double.infinity || averageDistance == 0) {
-    showError('Invalid distance detected. Ensure Wi-Fi is enabled.');
-    return;
+// <<<<<<< Flutter_Attendance_Bluetooth_Only
+  Future<List<int>> compressImage(File image, {int maxSizeKB = 500}) async {
+  final bytes = await image.readAsBytes();
+  final originalImage = img.decodeImage(bytes);
+
+  if (originalImage == null) {
+    throw Exception("Failed to decode the image.");
   }
 
-  // Check if the student is within the valid range to mark attendance
-  if (averageDistance <= 2.2) {
-    markAttendance();
+  // Downscale the image dimensions
+  final int maxDimension = 1024; // Set max dimension for width/height
+  img.Image resizedImage = img.copyResize(
+    originalImage,
+    width: originalImage.width > originalImage.height ? maxDimension : null,
+    height: originalImage.height > originalImage.width ? maxDimension : null,
+  );
+
+  // Compress the image to JPG format
+  int quality = 85; // Set default quality
+  List<int> compressedBytes = img.encodeJpg(resizedImage, quality: quality);
+
+  // Final check for size, and return even if it's slightly larger
+  if (compressedBytes.length > maxSizeKB * 1024) {
+    debugPrint("Compressed image size exceeds target but will be used.");
+  }
+
+  return compressedBytes;
+}
+
+
+ Future<bool> authenticateFace(BuildContext context, String uuid) async {
+  final ImagePicker picker = ImagePicker();
+  final XFile? pickedFile = await picker.pickImage(source: ImageSource.camera);
+
+  if (pickedFile == null) {
+    return false; // No image captured
+  }
+
+  final File image = File(pickedFile.path);
+
+  // Show loading indicator
+  // showDialog(
+  //   context: context,
+  //   barrierDismissible: false,
+  //   builder: (_) => const Center(child: CircularProgressIndicator()),
+  // );
+  
+showLoadingIndicator(context);
+  
+  try {
+    final compressedBytes = await compressImage(image);
+    final faceImage = base64Encode(compressedBytes);
+
+    final response = await http.post(
+      Uri.parse('${APIConstants.baseUrl}/attendance_api/verify_face.php'),
+      body: {
+        'uuid': uuid,
+        'face_image': faceImage,
+      },
+    );
+
+    // Navigator.of(context).pop(); // Dismiss the loading indicator
+
+    if (response.statusCode == 200) {
+      final result = jsonDecode(response.body);
+      return result['match'] == true;
+    } else {
+      return false;
+    }
+  } catch (e) {
+    // Navigator.of(context).pop(); // Dismiss the loading indicator
+    showError("Error during face authentication: $e");
+    return false;
+  }finally{
+    
+    hideLoadingIndicator(context);
+    
+  }
+}
+
+void showLoadingIndicator(BuildContext context) {
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) => const Center(child: CircularProgressIndicator()),
+  );
+}
+
+void hideLoadingIndicator(BuildContext context) {
+  Navigator.of(context, rootNavigator: true).pop();
+}
+
+
+
+
+double calculateFaceDistance(Map<String, dynamic> face1, Map<String, dynamic> face2) {
+  final double dx = face1["centerX"] - face2["centerX"];
+  final double dy = face1["centerY"] - face2["centerY"];
+  return sqrt(dx * dx + dy * dy);
+}
+
+ void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+Future<bool> _requestCameraPermission() async {
+    PermissionStatus status = await Permission.camera.request();
+    if (status.isGranted) {
+      return true;
+    } else {
+      _showSnackBar('Camera permission is required to proceed.');
+      return false;
+    }
+  }
+
+
+Future<void> markAttendanceWithRSSI(String ssid) async {
+
+   bool hasPermission = await _requestCameraPermission();
+      if (!hasPermission) return; // Don't proceed if permission is not granted
+  
+//  print(uuidBluetooth);  
+   final bool foundUUID = await _startScanning(uuidBluetooth!);
+  //  print(foundUUID);  
+  if (foundUUID) {
+
+    final bool faceVerified = await authenticateFace(context,widget.uuid!);
+    if (faceVerified) {
+      markAttendance();
+    
+    }else{
+     
+     showError('Face authentication failed');
+      return;
+    }
+
+// =======
+//   Future<void> markAttendanceWithRSSI(String ssid) async {
+//   // Check if the provided UUID exists in the database
+//   bool uuidExists = await DatabaseHelper.doesUuidExist(widget.uuid!);
+//   if (uuidExists) {
+//   // Cheak if student is in classroom 
+//   bool isFounded=await _startScanning(uuidBluetooth!);
+//   if(isFounded){
+//   // Calculate the average distance using RSSI
+//   final averageDistance = await calculateAverageDistance(ssid);
+//   if (averageDistance == double.infinity || averageDistance == 0) {
+//     showError('Invalid distance detected. Ensure Wi-Fi is enabled.');
+//     return;
+//   }
+
+//   // Check if the student is within the valid range to mark attendance
+//   if (averageDistance <= 2.2) {
+//     markAttendance();
+// >>>>>>> main
   } else {
-    showError('You are far away from the teacher.');
+    
+    showError('You Are Not In The Classroom');
+    return;
   }
   }else{
     showError('You Are Not In The Classroom');
@@ -221,6 +343,17 @@ class _ViewAttendanceState extends State<ViewAttendance> {
     return;
   }
 }
+
+ void _handleBackPress() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => StudentDashboard(uuid: widget.uuid!),
+      ),
+    );
+  }
+
+
 
 
   Future<void> markAttendance() async {
@@ -255,8 +388,12 @@ class _ViewAttendanceState extends State<ViewAttendance> {
     final lastAttendance = attendanceInfo.isNotEmpty ? attendanceInfo.last : null;
     final isLastAttendancePresent =
         lastAttendance != null && lastAttendance['status'] == 'P';
-
-    return BackgroundScaffold(
+ return WillPopScope(
+      onWillPop: () async {
+        _handleBackPress();
+        return false; // Prevent default back action
+      },
+      child: BackgroundScaffold(
       // appBar: AppBar(
       //   title: const Text('Attendance Details'),
       //   backgroundColor: const Color(0xFF1976D2),
@@ -349,7 +486,7 @@ class _ViewAttendanceState extends State<ViewAttendance> {
                                       ? const Text(
                                           'Online attendance active for this record.',
                                           style: TextStyle(
-                                            color: Colors.blue,
+                                            color: Colors.green,
                                             fontWeight: FontWeight.bold,
                                           ),
                                         )
@@ -385,6 +522,7 @@ class _ViewAttendanceState extends State<ViewAttendance> {
               splashColor: Colors.purpleAccent,
             )
           : null,
-    );
+    ),
+ );
   }
 }

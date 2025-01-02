@@ -1,10 +1,11 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import './student_dashboard.dart';
+// import './student_dashboard.dart';
 import 'constants.dart';
 import 'background_scaffold.dart';
 import 'student_register.dart';
+import 'student_dashboard_new.dart';
 
 class StudentLogin extends StatefulWidget {
   const StudentLogin({super.key});
@@ -57,7 +58,7 @@ class _StudentLoginState extends State<StudentLogin> {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (_) => StudentDashboard(uuid: uuid),
+              builder: (_) => StudentDashboardNew(uuid: uuid),
             ),
           );
         } else {

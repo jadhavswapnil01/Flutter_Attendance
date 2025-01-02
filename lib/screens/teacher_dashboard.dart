@@ -24,8 +24,9 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
   final TextEditingController _subjectcodeController = TextEditingController();
   final PageController _pageController = PageController();
   final TextEditingController _ssidController = TextEditingController();
-  static const platform = MethodChannel('com.example.untitled4/rssi');
+  // static const platform = MethodChannel('com.example.untitled4/lowlet_hightx');
   late String _generatedUuid;
+   String? _selectedChannel; 
 
   List classes = [];
   List subjectnames = [];
@@ -242,103 +243,87 @@ Future<void> updateHotspotSSIDInDatabase(String ssid) async {
   }
 }
   Future<void> toggleOnlineAttendance() async {
-  final newStatus = _isAttendanceActive ? 'inactive' : 'active';
-  String selectedClassName = classes
-      .firstWhere((classItem) => classItem['id'].toString() == selectedClassId)['class_name'];
+    if (_selectedChannel == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Select a beacon configuration first.")),
+      );
+      return;
+    }
 
-  final response = await http.post(
-    Uri.parse('${APIConstants.baseUrl}/attendance_api/update_attendance_status.php'),
-    body: {
-      'class_name': selectedClassName,
-      'subject_code': subjectCode,
-      'lec_type': selectedLectureType,
-      'status': newStatus,
-    },
-  );
+    final newStatus = _isAttendanceActive ? 'inactive' : 'active';
+    final selectedClassName = classes
+        .firstWhere((classItem) =>
+            classItem['id'].toString() == selectedClassId)['class_name'];
 
-  final data = json.decode(response.body);
-  if (data['success']) {
-    if (!_isAttendanceActive) {
-      // Generate a unique UUID and try starting the beacon
-      _generatedUuid = _generateUuid();
-      final beaconStarted = await _startBeacon(_generatedUuid);
+    final response = await http.post(
+      Uri.parse('${APIConstants.baseUrl}/attendance_api/update_attendance_status.php'),
+      body: {
+        'class_name': selectedClassName,
+        'subject_code': subjectCode,
+        'lec_type': selectedLectureType,
+        'status': newStatus,
+      },
+    );
 
-      if (!beaconStarted) {
-        // If beacon fails, revert attendance status to inactive
-        setState(() {
-          _isAttendanceActive = false;
-        });
+    final data = json.decode(response.body);
+    if (data['success']) {
+      if (!_isAttendanceActive) {
+        _generatedUuid = _generateUuid();
+        print(_generatedUuid);
+        final beaconStarted = await _startBeacon(_selectedChannel!, _generatedUuid);
 
-        // Send updated status to the server
-        await http.post(
-          Uri.parse('${APIConstants.baseUrl}/attendance_api/update_attendance_status.php'),
-          body: {
-            'class_name': selectedClassName,
-            'subject_code': subjectCode,
-            'lec_type': selectedLectureType,
-            'status': 'inactive',
-          },
-        );
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Failed to start beacon. Attendance deactivated.")),
-        );
-        return;
+        if (!beaconStarted) {
+          await http.post(
+            Uri.parse('${APIConstants.baseUrl}/attendance_api/update_attendance_status.php'),
+            body: {
+              'class_name': selectedClassName,
+              'subject_code': subjectCode,
+              'lec_type': selectedLectureType,
+              'status': 'inactive',
+            },
+          );
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Failed to start beacon. Attendance deactivated.")),
+          );
+          return;
+        }
+      } else {
+        await _stopBeacon();
       }
 
-      // Update UUID in the database
-      await updateUUID(widget.email, _generatedUuid);
+      setState(() {
+        _isAttendanceActive = !_isAttendanceActive;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(data['message'])),
+      );
     } else {
-      // Stop the beacon when deactivating attendance
-      await _stopBeacon();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(data['message'])),
+      );
     }
-
-    setState(() {
-      _isAttendanceActive = !_isAttendanceActive;
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(data['message'])),
-    );
-  } else {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(data['message'])),
-    );
   }
-}
 
-
-  Future<bool> _startBeacon(String uuid) async {
-  try {
-    
-    // Call the platform channel or native code to start the beacon
-    final result = await MethodChannel('com.example.untitled4/rssi')
-        .invokeMethod('startBeacon', {"uuid": uuid});
-    if (result == true) {
-      // print(uuid);
-      return true;
-    } else {
-      throw Exception("Beacon not started");
+  Future<bool> _startBeacon(String channel, String uuid) async {
+    try {
+      final result = await MethodChannel(channel).invokeMethod('startBeacon', {"uuid": uuid});
+      return result == true;
+    } catch (e) {
+      return false;
     }
-  } catch (e) {
-    // print("Error starting beacon: $e");
-    return false;
   }
-}
-
 
   Future<void> _stopBeacon() async {
-    // Call platform-specific code to stop the beacon
-    // const platform = MethodChannel('com.example.untitled4/rssi');
     try {
-      await platform.invokeMethod('stopBeacon');
+      await MethodChannel('com.example.untitled4/lowlet_hightx').invokeMethod('stopBeacon');
     } catch (e) {
-      // print('Failed to stop beacon: $e');
+      print(e);
     }
   }
 
-   String _generateUuid() {
-    var uuid = Uuid();
+  String _generateUuid() {
+    final uuid = Uuid();
     return uuid.v4();
   }
 
@@ -485,6 +470,52 @@ Future<void> updateHotspotSSIDInDatabase(String ssid) async {
     );
   }
 
+
+ Widget _buildBeaconConfigButtons() {
+    final configurations = {
+      'Low Latency High TX': 'com.example.untitled4/lowlet_hightx',
+      'Balanced Latency High TX': 'com.example.untitled4/ballet_hightx',
+      'Low Latency Medium TX': 'com.example.untitled4/lowlet_medtx',
+      'Balanced Latency Medium TX': 'com.example.untitled4/ballet_medtx',
+      'Low Latency Low TX': 'com.example.untitled4/lowlet_lowtx',
+      'Balanced Latency Low TX': 'com.example.untitled4/ballet_lowtx',
+    };
+
+    return GridView.builder(
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 3,
+        crossAxisSpacing: 8,
+        mainAxisSpacing: 8,
+      ),
+      shrinkWrap: true,
+      itemCount: configurations.keys.length,
+      itemBuilder: (context, index) {
+        final configName = configurations.keys.elementAt(index);
+        final channel = configurations[configName]!;
+        return ElevatedButton(
+          onPressed: () async {
+            if (_isAttendanceActive) {
+              await _stopBeacon(); // Stop the current beacon
+              setState(() {
+                _isAttendanceActive = false; // Deactivate attendance
+              });
+            }
+            setState(() {
+              _selectedChannel = channel; // Select new beacon configuration
+            });
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: _selectedChannel == channel
+                ? Colors.green
+                : const Color.fromARGB(255, 255, 255, 255),
+          ),
+          child: Text(configName, textAlign: TextAlign.center),
+        );
+      },
+    );
+  }
+
 Widget buildManageAttendanceSection() {
   return Padding(
     padding: const EdgeInsets.all(16.0),
@@ -516,44 +547,49 @@ Widget buildManageAttendanceSection() {
                 ),
               )
             : const Text('No class created yet.'),
-        const SizedBox(height: 20),
-        ElevatedButton(
-          onPressed: () async {
-            await toggleOnlineAttendance();
-            if (_isAttendanceActive) {
-              _startCountdownTimer();
-            } else {
-              _countdownTimer?.cancel();
-              setState(() {
-                _remainingTime = const Duration(minutes: 6, seconds: 7);
-              });
-            }
-          },
-          style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 25),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+       const SizedBox(height: 20),
+          _buildBeaconConfigButtons(),
+          const SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: _selectedChannel == null
+                ? null
+                : () async {
+                    await toggleOnlineAttendance();
+                    if (_isAttendanceActive) {
+                      _startCountdownTimer();
+                    } else {
+                      _countdownTimer?.cancel();
+                      setState(() {
+                        _remainingTime =
+                            const Duration(minutes: 6, seconds: 7);
+                      });
+                    }
+                  },
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 25),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              backgroundColor: const Color(0xFF673AB7),
             ),
-            backgroundColor: const Color(0xFF673AB7),
+            child: Text(
+              _isAttendanceActive
+                  ? 'Deactivate Online Attendance'
+                  : 'Activate Online Attendance',
+              style: const TextStyle(fontSize: 18, color: Colors.white),
+            ),
           ),
-          child: Text(
-            _isAttendanceActive
-                ? 'Deactivate Online Attendance'
-                : 'Activate Online Attendance',
-            style: const TextStyle(fontSize: 18, color: Colors.white),
-          ),
-        ),
-        const SizedBox(height: 20),
-        _isAttendanceActive && _remainingTime.inSeconds > 0
-            ? Text(
-                'Time Remaining: ${_formatTime(_remainingTime)}',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Color.fromARGB(255, 0, 0, 0),
-                ),
-              )
-            : const SizedBox(),
+          const SizedBox(height: 20),
+          _isAttendanceActive && _remainingTime.inSeconds > 0
+              ? Text(
+                  'Time Remaining: ${_formatTime(_remainingTime)}',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Color.fromARGB(255, 0, 0, 0),
+                  ),
+                )
+              : const SizedBox(),
       ],
     ),
   );

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'constants.dart';
 import 'view_attendance.dart';
 import 'package:untitled4/screens/background_scaffold.dart';
+import 'student_dashboard_new.dart';
 
 class StudentDashboard extends StatefulWidget {
   final String uuid;
@@ -28,6 +29,15 @@ class _StudentDashboardState extends State<StudentDashboard>
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     fetchStudentData();
+  }
+
+  void _handleBackPress() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => StudentDashboardNew(uuid: widget.uuid),
+      ),
+    );
   }
 
   
@@ -84,8 +94,12 @@ class _StudentDashboardState extends State<StudentDashboard>
 
 @override
 Widget build(BuildContext context) {
-  return BackgroundScaffold(
-  
+ return WillPopScope(
+      onWillPop: () async {
+        _handleBackPress();
+        return false; // Prevent default back action
+      },
+      child: BackgroundScaffold(
 appBar: AppBar(
   elevation: 0,
   
@@ -133,7 +147,8 @@ appBar: AppBar(
               _buildSubjectList(labSubjects, 'Lab'),
             ],
           ),
-  );
+  ),
+ );
 }
   Widget _buildSubjectList(List<Map<String, dynamic>> subjects, String lecType) {
     if (subjects.isEmpty) {
@@ -217,5 +232,7 @@ appBar: AppBar(
       },
     );
   }
+
+  
 }
 
