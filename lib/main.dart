@@ -68,7 +68,11 @@ class HomeScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+// <<<<<<< Flutter_Attendance_Bluetooth_Only
                   const SizedBox(height: 130),
+// =======
+//                   const SizedBox(height: 90),
+// >>>>>>> main
                   const Icon(
                     Icons.school_rounded,
                     size: 120,
@@ -198,7 +202,11 @@ class HomeScreen extends StatelessWidget {
         crossAxisCount: 2, // Number of columns
         crossAxisSpacing: 16.0, // Horizontal spacing between buttons
         mainAxisSpacing: 16.0, // Vertical spacing between buttons
+// <<<<<<< Flutter_Attendance_Bluetooth_Only
         childAspectRatio: 1.7, // Width to height ratio of each button
+// =======
+//         childAspectRatio: 2, // Width to height ratio of each button
+// >>>>>>> main
       ),
       itemBuilder: (context, index) {
         final button = buttonData[index];
@@ -223,12 +231,20 @@ class HomeScreen extends StatelessWidget {
     splashColor: const Color(0xFF673AB7).withAlpha(50),
     child: Container(
       decoration: BoxDecoration(
+// <<<<<<< Flutter_Attendance_Bluetooth_Only
         color: Colors.transparent,
+// =======
+//         color: Colors.white,
+// >>>>>>> main
         border: Border.all(color: const Color(0xFF673AB7), width: 1.5),
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
+// <<<<<<< Flutter_Attendance_Bluetooth_Only
             color: Colors.black.withAlpha(22),
+// =======
+//             color: Colors.black.withAlpha(25),
+// >>>>>>> main
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -239,10 +255,17 @@ class HomeScreen extends StatelessWidget {
         children: [
           Icon(
             icon,
+// <<<<<<< Flutter_Attendance_Bluetooth_Only
             size: 25, // Reduced size for the icon
             color: const Color(0xFF673AB7),
           ),
           const SizedBox(height: 4), // Reduced spacing
+// =======
+//             size: 30, // Reduced size for the icon
+//             color: const Color(0xFF673AB7),
+//           ),
+//           const SizedBox(height: 5), // Reduced spacing
+// >>>>>>> main
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
             child: Text(
