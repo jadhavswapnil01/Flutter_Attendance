@@ -1,7 +1,7 @@
 import 'dart:convert';
 // import 'dart:ffi';
 import 'dart:io';
-import 'dart:math';
+// import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'constants.dart';
@@ -13,7 +13,8 @@ import 'package:untitled4/screens/background_scaffold.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:untitled4/screens/student_dashboard.dart';
-import 'package:image/image.dart' as img;
+// import 'package:image/image.dart' as img;
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 
 
 
@@ -100,13 +101,8 @@ class _ViewAttendanceState extends State<ViewAttendance> {
     }
   }
 
-// <<<<<<< Flutter_Attendance_Bluetooth_Only
  Future<bool> _startScanning(String uuid) async {
   final MethodChannel channel = MethodChannel('com.example.untitled4/lowlet_hightx');
-// =======
-//    Future<bool> _startScanning(String uuid) async {
-//   final MethodChannel channel = MethodChannel('com.example.untitled4/rssi');
-// >>>>>>> main
   final Completer<bool> completer = Completer<bool>();
 
   channel.setMethodCallHandler((MethodCall call) async {
@@ -121,18 +117,6 @@ class _ViewAttendanceState extends State<ViewAttendance> {
   } catch (e) {
     completer.completeError(e);
   }
-// <<<<<<< Flutter_Attendance_Bluetooth_Only
-// =======
-
-//   return completer.future;
-// }
-
-//   Future<double> calculateAverageDistance(String ssid) async {
-//     List<int> rssiValues = [];
-//     try {
-//       for (int i = 0; i < 4; i++) {
-//         try{final rssi = await platform.invokeMethod<int>('getRSSI', {'ssid': ssid});
-// >>>>>>> main
 
   return completer.future;
 }
@@ -174,32 +158,19 @@ class _ViewAttendanceState extends State<ViewAttendance> {
     }
   }
 
-// <<<<<<< Flutter_Attendance_Bluetooth_Only
-  Future<List<int>> compressImage(File image, {int maxSizeKB = 500}) async {
-  final bytes = await image.readAsBytes();
-  final originalImage = img.decodeImage(bytes);
-
-  if (originalImage == null) {
-    throw Exception("Failed to decode the image.");
-  }
-
-  // Downscale the image dimensions
-  final int maxDimension = 1024; // Set max dimension for width/height
-  img.Image resizedImage = img.copyResize(
-    originalImage,
-    width: originalImage.width > originalImage.height ? maxDimension : null,
-    height: originalImage.height > originalImage.width ? maxDimension : null,
+ Future<List<int>> _compressImage(File image) async {
+  final compressedBytes = await FlutterImageCompress.compressWithFile(
+    image.absolute.path,
+    quality: 70,
+    format: CompressFormat.jpeg,
+    minWidth: 1024,  // Resize dimensions if needed
+    minHeight: 1024, // Ensure size matches max dimension
   );
 
-  // Compress the image to JPG format
-  int quality = 85; // Set default quality
-  List<int> compressedBytes = img.encodeJpg(resizedImage, quality: quality);
-
-  // Final check for size, and return even if it's slightly larger
-  if (compressedBytes.length > maxSizeKB * 1024) {
-    debugPrint("Compressed image size exceeds target but will be used.");
+  if (compressedBytes == null) {
+    throw Exception("Failed to compress the image.");
   }
-
+  
   return compressedBytes;
 }
 
@@ -207,8 +178,10 @@ class _ViewAttendanceState extends State<ViewAttendance> {
  Future<bool> authenticateFace(BuildContext context, String uuid) async {
   final ImagePicker picker = ImagePicker();
   final XFile? pickedFile = await picker.pickImage(source: ImageSource.camera);
-
+showLoadingIndicator(context);
   if (pickedFile == null) {
+    hideLoadingIndicator(context);
+    showError("No Image Selected");
     return false; // No image captured
   }
 
@@ -221,10 +194,10 @@ class _ViewAttendanceState extends State<ViewAttendance> {
   //   builder: (_) => const Center(child: CircularProgressIndicator()),
   // );
   
-showLoadingIndicator(context);
+// showLoadingIndicator(context);
   
   try {
-    final compressedBytes = await compressImage(image);
+    final compressedBytes = await _compressImage(image);
     final faceImage = base64Encode(compressedBytes);
 
     final response = await http.post(
@@ -241,10 +214,14 @@ showLoadingIndicator(context);
       final result = jsonDecode(response.body);
       return result['match'] == true;
     } else {
+      hideLoadingIndicator(context);
+      showError("Error Connecting to the server");
+      
       return false;
     }
   } catch (e) {
     // Navigator.of(context).pop(); // Dismiss the loading indicator
+    hideLoadingIndicator(context);
     showError("Error during face authentication: $e");
     return false;
   }finally{
@@ -269,11 +246,11 @@ void hideLoadingIndicator(BuildContext context) {
 
 
 
-double calculateFaceDistance(Map<String, dynamic> face1, Map<String, dynamic> face2) {
-  final double dx = face1["centerX"] - face2["centerX"];
-  final double dy = face1["centerY"] - face2["centerY"];
-  return sqrt(dx * dx + dy * dy);
-}
+// double calculateFaceDistance(Map<String, dynamic> face1, Map<String, dynamic> face2) {
+//   final double dx = face1["centerX"] - face2["centerX"];
+//   final double dy = face1["centerY"] - face2["centerY"];
+//   return sqrt(dx * dx + dy * dy);
+// }
 
  void _showSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
@@ -291,13 +268,15 @@ Future<bool> _requestCameraPermission() async {
 
 
 Future<void> markAttendanceWithRSSI(String ssid) async {
-
+  fetchClassroomStatus();
+  
+if(isAttendanceActive){
    bool hasPermission = await _requestCameraPermission();
       if (!hasPermission) return; // Don't proceed if permission is not granted
   
-//  print(uuidBluetooth);  
+ 
    final bool foundUUID = await _startScanning(uuidBluetooth!);
-  //  print(foundUUID);  
+  //  print(foundUUID); 
   if (foundUUID) {
 
     final bool faceVerified = await authenticateFace(context,widget.uuid!);
@@ -310,38 +289,15 @@ Future<void> markAttendanceWithRSSI(String ssid) async {
       return;
     }
 
-// =======
-//   Future<void> markAttendanceWithRSSI(String ssid) async {
-//   // Check if the provided UUID exists in the database
-//   bool uuidExists = await DatabaseHelper.doesUuidExist(widget.uuid!);
-//   if (uuidExists) {
-//   // Cheak if student is in classroom 
-//   bool isFounded=await _startScanning(uuidBluetooth!);
-//   if(isFounded){
-//   // Calculate the average distance using RSSI
-//   final averageDistance = await calculateAverageDistance(ssid);
-//   if (averageDistance == double.infinity || averageDistance == 0) {
-//     showError('Invalid distance detected. Ensure Wi-Fi is enabled.');
-//     return;
-//   }
-
-//   // Check if the student is within the valid range to mark attendance
-//   if (averageDistance <= 2.2) {
-//     markAttendance();
-// >>>>>>> main
   } else {
     
     showError('You Are Not In The Classroom');
     return;
   }
-  }else{
-    showError('You Are Not In The Classroom');
-    return;
-  }
-  }else{
-    showError('Loged in from another device. Attendance not allowed.');
-    return;
-  }
+}else{
+  showError('Online attendance is no longer active.');
+  return;
+}
 }
 
  void _handleBackPress() {
@@ -504,6 +460,8 @@ Future<void> markAttendanceWithRSSI(String ssid) async {
       floatingActionButton: isAttendanceActive && !isLastAttendancePresent
           ? FloatingActionButton.extended(
               onPressed: () async {
+                // fetchClassroomStatus();
+                // fetchAttendanceInfo();
                 // print(ssid);
                 final passingSsid = ssid;
                 if (passingSsid!.isEmpty) {
