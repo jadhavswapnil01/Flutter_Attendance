@@ -5,7 +5,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'constants.dart';
 import 'student_dashboard_new.dart';
-import 'package:image/image.dart' as img;
+// import 'package:image/image.dart' as img;
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 
 class FaceRegistrationScreen extends StatefulWidget {
   final String uuid;
@@ -21,7 +22,7 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen> {
   final ImagePicker _picker = ImagePicker();
 
   Future<void> _pickImage() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    final pickedFile = await _picker.pickImage(source: ImageSource.camera);
     if (pickedFile != null) {
       setState(() {
         _image = File(pickedFile.path);
@@ -66,23 +67,20 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen> {
   }
 
   Future<List<int>> _compressImage(File image) async {
-    final bytes = await image.readAsBytes();
-    final originalImage = img.decodeImage(bytes);
+  final compressedBytes = await FlutterImageCompress.compressWithFile(
+    image.absolute.path,
+    quality: 90,
+    format: CompressFormat.jpeg,
+    minWidth: 1024,  // Resize dimensions if needed
+    minHeight: 1024, // Ensure size matches max dimension
+  );
 
-    if (originalImage == null) {
-      throw Exception("Failed to decode the image.");
-    }
-
-    final maxDimension = 1024;
-    final resizedImage = img.copyResize(
-      originalImage,
-      width: originalImage.width > originalImage.height ? maxDimension : null,
-      height: originalImage.height > originalImage.width ? maxDimension : null,
-    );
-
-    return img.encodeJpg(resizedImage, quality: 85);
+  if (compressedBytes == null) {
+    throw Exception("Failed to compress the image.");
   }
-
+  
+  return compressedBytes;
+}
   void _redirectToDashboard() {
     Navigator.pushAndRemoveUntil(
       context,

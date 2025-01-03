@@ -13,7 +13,8 @@ import 'package:untitled4/screens/background_scaffold.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:untitled4/screens/student_dashboard.dart';
-import 'package:image/image.dart' as img;
+// import 'package:image/image.dart' as img;
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 
 
 
@@ -157,31 +158,19 @@ class _ViewAttendanceState extends State<ViewAttendance> {
     }
   }
 
-  Future<List<int>> compressImage(File image, {int maxSizeKB = 500}) async {
-  final bytes = await image.readAsBytes();
-  final originalImage = img.decodeImage(bytes);
-
-  if (originalImage == null) {
-    throw Exception("Failed to decode the image.");
-  }
-
-  // Downscale the image dimensions
-  final int maxDimension = 1024; // Set max dimension for width/height
-  img.Image resizedImage = img.copyResize(
-    originalImage,
-    width: originalImage.width > originalImage.height ? maxDimension : null,
-    height: originalImage.height > originalImage.width ? maxDimension : null,
+ Future<List<int>> _compressImage(File image) async {
+  final compressedBytes = await FlutterImageCompress.compressWithFile(
+    image.absolute.path,
+    quality: 70,
+    format: CompressFormat.jpeg,
+    minWidth: 1024,  // Resize dimensions if needed
+    minHeight: 1024, // Ensure size matches max dimension
   );
 
-  // Compress the image to JPG format
-  int quality = 85; // Set default quality
-  List<int> compressedBytes = img.encodeJpg(resizedImage, quality: quality);
-
-  // Final check for size, and return even if it's slightly larger
-  if (compressedBytes.length > maxSizeKB * 1024) {
-    debugPrint("Compressed image size exceeds target but will be used.");
+  if (compressedBytes == null) {
+    throw Exception("Failed to compress the image.");
   }
-
+  
   return compressedBytes;
 }
 
@@ -206,7 +195,7 @@ class _ViewAttendanceState extends State<ViewAttendance> {
 showLoadingIndicator(context);
   
   try {
-    final compressedBytes = await compressImage(image);
+    final compressedBytes = await _compressImage(image);
     final faceImage = base64Encode(compressedBytes);
 
     final response = await http.post(
