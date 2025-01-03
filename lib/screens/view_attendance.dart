@@ -101,8 +101,13 @@ class _ViewAttendanceState extends State<ViewAttendance> {
     }
   }
 
+// <<<<<<< Flutter_Attendance_Bluetooth_Only
  Future<bool> _startScanning(String uuid) async {
   final MethodChannel channel = MethodChannel('com.example.untitled4/lowlet_hightx');
+// =======
+//    Future<bool> _startScanning(String uuid) async {
+//   final MethodChannel channel = MethodChannel('com.example.untitled4/rssi');
+// >>>>>>> main
   final Completer<bool> completer = Completer<bool>();
 
   channel.setMethodCallHandler((MethodCall call) async {
@@ -117,6 +122,18 @@ class _ViewAttendanceState extends State<ViewAttendance> {
   } catch (e) {
     completer.completeError(e);
   }
+// <<<<<<< Flutter_Attendance_Bluetooth_Only
+// =======
+
+//   return completer.future;
+// }
+
+//   Future<double> calculateAverageDistance(String ssid) async {
+//     List<int> rssiValues = [];
+//     try {
+//       for (int i = 0; i < 4; i++) {
+//         try{final rssi = await platform.invokeMethod<int>('getRSSI', {'ssid': ssid});
+// >>>>>>> main
 
   return completer.future;
 }
@@ -281,11 +298,38 @@ Future<void> markAttendanceWithRSSI(String ssid) async {
       return;
     }
 
+// =======
+//   Future<void> markAttendanceWithRSSI(String ssid) async {
+//   // Check if the provided UUID exists in the database
+//   bool uuidExists = await DatabaseHelper.doesUuidExist(widget.uuid!);
+//   if (uuidExists) {
+//   // Cheak if student is in classroom 
+//   bool isFounded=await _startScanning(uuidBluetooth!);
+//   if(isFounded){
+//   // Calculate the average distance using RSSI
+//   final averageDistance = await calculateAverageDistance(ssid);
+//   if (averageDistance == double.infinity || averageDistance == 0) {
+//     showError('Invalid distance detected. Ensure Wi-Fi is enabled.');
+//     return;
+//   }
+
+//   // Check if the student is within the valid range to mark attendance
+//   if (averageDistance <= 2.2) {
+//     markAttendance();
+// >>>>>>> main
   } else {
     
     showError('You Are Not In The Classroom');
     return;
   }
+  // }else{
+  //   showError('You Are Not In The Classroom');
+  //   return;
+  // }
+  // }else{
+  //   showError('Loged in from another device. Attendance not allowed.');
+  //   return;
+  // }
 }
 
  void _handleBackPress() {
