@@ -281,61 +281,72 @@ public class MainActivity extends FlutterActivity {
     private ScanCallback scanCallback;
 
 // <<<<<<< Flutter_Attendance_Bluetooth_Only
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    public void startScanninguuid1(String uuid) {
-        if (!bluetoothAdapter.isEnabled()) {
-            requestBluetoothEnable();
-            return;
-        }
-    
-        BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
-        bluetoothAdapter = bluetoothManager.getAdapter();
-        scanner = bluetoothAdapter.getBluetoothLeScanner();
-        if (scanner == null) {
-            Toast.makeText(this, "BLE Scanning not supported", Toast.LENGTH_LONG).show();
-            return;
-        }
-    
-        // Set UUID to scan for
-        ParcelUuid targetUuid = ParcelUuid.fromString(uuid);
-        ScanSettings scanSettings = new ScanSettings.Builder()
-        .setScanMode(ScanSettings.SCAN_MODE_BALANCED)
-        .build();
-
-        // scanner.startScan(null, scanSettings, scanCallback);
-    
-        // Start scanning
-        scanner.startScan(null, scanSettings,new ScanCallback() {
-            @Override
-            public void onScanResult(int callbackType, ScanResult result) {
-                super.onScanResult(callbackType, result);
-    
-                if (result.getScanRecord() != null &&
-                        result.getScanRecord().getServiceUuids() != null &&
-                        result.getScanRecord().getServiceUuids().contains(targetUuid)) {
-                    scanner.stopScan(this); // Stop scanning immediately after finding the target
-                    Toast.makeText(MainActivity.this, "Beacon found: " + result.getDevice().getAddress(), Toast.LENGTH_SHORT).show();
-                    sendScanResultToFlutter(true);
-                }
-            }
-    
-            @Override
-            public void onScanFailed(int errorCode) {
-                super.onScanFailed(errorCode);
-                Log.e("ScanError", "Scan failed with error: " + errorCode);
-            }
-        });
-    
-        // Stop scanning automatically after 10 seconds
-        new Handler(Looper.getMainLooper()).postDelayed(() -> scanner.stopScan(scanCallback), 10000);
+@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+public void startScanninguuid1(String uuid) {
+    if (!bluetoothAdapter.isEnabled()) {
+        requestBluetoothEnable();
+        return;
     }
-    
-        
-        // Helper to send scan results to Flutter
-        private void sendScanResultToFlutter(boolean result) {
+
+    BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
+    bluetoothAdapter = bluetoothManager.getAdapter();
+    scanner = bluetoothAdapter.getBluetoothLeScanner();
+    if (scanner == null) {
+        Toast.makeText(this, "BLE Scanning not supported", Toast.LENGTH_LONG).show();
+        return;
+    }
+
+    // Set UUID to scan for
+    ParcelUuid targetUuid = ParcelUuid.fromString(uuid);
+    ScanSettings scanSettings = new ScanSettings.Builder()
+            .setScanMode(ScanSettings.SCAN_MODE_BALANCED)
+            .build();
+
+    // Flag to track if the target UUID was found
+    final boolean[] isTargetFound = {false};
+
+    ScanCallback scanCallback = new ScanCallback() {
+        @Override
+        public void onScanResult(int callbackType, ScanResult result) {
+            super.onScanResult(callbackType, result);
+
+            if (result.getScanRecord() != null &&
+                    result.getScanRecord().getServiceUuids() != null &&
+                    result.getScanRecord().getServiceUuids().contains(targetUuid)) {
+                isTargetFound[0] = true; // Target found
+                scanner.stopScan(this); // Stop scanning immediately
+                Toast.makeText(MainActivity.this, "Beacon found: " + result.getDevice().getAddress(), Toast.LENGTH_SHORT).show();
+                sendScanResultToFlutter(true);
+            }
+        }
+
+        @Override
+        public void onScanFailed(int errorCode) {
+            super.onScanFailed(errorCode);
+            Log.e("ScanError", "Scan failed with error: " + errorCode);
+        }
+    };
+
+    // Start scanning
+    scanner.startScan(null, scanSettings, scanCallback);
+
+    // Stop scanning after 5 seconds and handle the result
+    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+        scanner.stopScan(scanCallback);
+        if (!isTargetFound[0]) {
+            // If the target UUID wasn't found within 5 seconds
+            sendScanResultToFlutter(false);
+            Toast.makeText(MainActivity.this, "You are not in classroom", Toast.LENGTH_SHORT).show();
+        }
+    }, 5000);
+}
+
+// Helper to send scan results to Flutter
+private void sendScanResultToFlutter(boolean result) {
     new MethodChannel(getFlutterEngine().getDartExecutor(), "com.example.untitled4/lowlet_hightx")
             .invokeMethod("onBeaconFound", result);
 }
+
 
 
 

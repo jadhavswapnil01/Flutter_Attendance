@@ -227,18 +227,18 @@ Future<void> updateHotspotSSIDInDatabase(String ssid) async {
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       if (data['success'] == true) {
-        // print("UUID updated successfully.");
+        print("UUID updated successfully.");
         return true;
       } else {
-        // print("Error: ${data['message']}");
+        print("Error: ${data['message']}");
         return false;
       }
     } else {
-      // print("Server error: ${response.statusCode}");
+      print("Server error: ${response.statusCode}");
       return false;
     }
   } catch (e) {
-    // print("Exception occurred: $e");
+    print("Exception occurred: $e");
     return false;
   }
 }
@@ -269,7 +269,7 @@ Future<void> updateHotspotSSIDInDatabase(String ssid) async {
     if (data['success']) {
       if (!_isAttendanceActive) {
         _generatedUuid = _generateUuid();
-        print(_generatedUuid);
+        // print(_generatedUuid);
         final beaconStarted = await _startBeacon(_selectedChannel!, _generatedUuid);
 
         if (!beaconStarted) {
@@ -287,6 +287,9 @@ Future<void> updateHotspotSSIDInDatabase(String ssid) async {
           );
           return;
         }
+
+        // Update UUID in the database
+      await updateUUID(widget.email, _generatedUuid);
       } else {
         await _stopBeacon();
       }
