@@ -1,5 +1,4 @@
 <?php
-
 include("connect.php");
 $conn = dbconnection();
 
@@ -15,33 +14,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Submit task to Celery for encoding generation
-    $command = "celery -A celery_app generate_encoding.delay('$temp_path')";
-    $output = shell_exec($command);
+    $command = escapeshellcmd("celery -A celery_tasks.tasks call generate_encoding --args='[\"$temp_path\"]'");
+    $task_id = trim(shell_exec($command));
 
-    // You can handle the output here to check task success or failure.
-    if (trim($output) == "NO_FACE_DETECTED") {
-        echo json_encode(["success" => false, "message" => "No face detected in the image."]);
-        unlink($temp_path); // Delete temporary file
-    } else {
-        // Store encoding in the database (or the path if you decide not to store the encoding directly)
+    // Poll Celery for task status
+    $status_command = escapeshellcmd("celery -A celery_tasks.tasks result $task_id");
+    $result = null;
+
+    do {
+        sleep(2); // Wait before checking status
+        $status_output = shell_exec($status_command);
+        $result = json_decode($status_output, true);
+    } while ($result === null || !isset($result['state']) || $result['state'] !== "SUCCESS");
+
+    // Handle Celery task result
+    if (isset($result['result']['success']) && $result['result']['success'] === false) {
+        if ($result['result']['error'] === "NO_FACE_DETECTED") {
+            echo json_encode(["success" => false, "message" => "No face detected in the image."]);
+        } else {
+            echo json_encode(["success" => false, "message" => $result['result']['error']]);
+        }
+    } elseif (isset($result['result']['success']) && $result['result']['success'] === true) {
         $sql = "UPDATE students SET face_image = ? WHERE uuid = ?";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("ss", $temp_path, $uuid);
-
         $success = $stmt->execute();
         $stmt->close();
 
-        if ($success) {
-            echo json_encode(["success" => true, "message" => "Face registered successfully!"]);
-        } else {
-            echo json_encode(["success" => false, "message" => "Error saving face encoding."]);
-        }
+        echo json_encode(["success" => $success, "message" => $success ? "Face registered successfully!" : "Database error."]);
+    } else {
+        echo json_encode(["success" => false, "message" => "Unexpected error occurred."]);
     }
 
-    $conn->close();
-} else {
-    header('Content-Type: application/json');
-    echo json_encode(["success" => false, "message" => "Invalid request."]);
+    // Cleanup
+    unlink($temp_path);
     $conn->close();
 }
 ?>
