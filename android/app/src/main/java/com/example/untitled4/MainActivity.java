@@ -4,7 +4,7 @@ import androidx.annotation.NonNull;
 import io.flutter.embedding.android.FlutterActivity;
 import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.plugin.common.MethodChannel;
-import android.net.wifi.WifiManager;
+// import android.net.wifi.WifiManager;
 // import android.net.wifi.ScanResult;
 import android.content.Context;
 import android.app.Activity;
@@ -27,7 +27,7 @@ import android.os.ParcelUuid;
 import android.widget.Toast;
 import android.os.Looper;
 import java.lang.reflect.Method; // For Method class
-import android.net.wifi.WifiConfiguration;
+// import android.net.wifi.WifiConfiguration;
 import android.util.Log;
 import android.content.pm.PackageManager;
 import android.content.Intent;
