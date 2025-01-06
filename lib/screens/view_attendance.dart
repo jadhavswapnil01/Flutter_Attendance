@@ -8,7 +8,7 @@ import 'constants.dart';
 import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:untitled4/screens/background_scaffold.dart';
-// import 'package:untitled4/helpers/database_helper.dart';
+import 'package:untitled4/helpers/database_helper.dart';
 // import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -269,7 +269,10 @@ Future<bool> _requestCameraPermission() async {
 
 Future<void> markAttendanceWithRSSI(String ssid) async {
   fetchClassroomStatus();
+
   
+ final bool uuidExists = await DatabaseHelper.doesUuidExist(widget.uuid!);
+  if (uuidExists) { 
 if(isAttendanceActive){
    bool hasPermission = await _requestCameraPermission();
       if (!hasPermission) return; // Don't proceed if permission is not granted
@@ -298,6 +301,11 @@ if(isAttendanceActive){
   showError('Online attendance is no longer active.');
   return;
 }
+}else {
+    
+    showError('Logged in from another device. Attendance not allowed.');
+    return;
+  }
 }
 
  void _handleBackPress() {
