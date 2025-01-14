@@ -108,7 +108,7 @@ The Smart Attendance System is a Flutter-based application that simplifies and s
 1. Clone the repository:
    ```bash
    git clone https://github.com/yourusername/smart-attendance-system.git
-
+   ```
 2. Navigate to the project directory:
 
    ```bash

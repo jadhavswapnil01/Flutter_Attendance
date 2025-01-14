@@ -9,8 +9,8 @@ import 'student_dashboard_new.dart';
 
 class StudentDashboard extends StatefulWidget {
   final String uuid;
-
-  const StudentDashboard({Key? key, required this.uuid}) : super(key: key);
+  final String email;
+  const StudentDashboard({Key? key, required this.uuid, required this.email}) : super(key: key);
 
   @override
   State<StudentDashboard> createState() => _StudentDashboardState();
@@ -23,27 +23,47 @@ class _StudentDashboardState extends State<StudentDashboard>
   List<Map<String, dynamic>> tutorialSubjects = [];
   List<Map<String, dynamic>> labSubjects = [];
   String message = '';
-
+  bool isLoading = true; // Add loading flag
   @override
   void initState() {
+    
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    fetchStudentData();
+    fetchStudentData(context);
+    
   }
 
   void _handleBackPress() {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (_) => StudentDashboardNew(uuid: widget.uuid),
+        builder: (_) => StudentDashboardNew(uuid: widget.uuid, email: widget.email),
       ),
     );
   }
+void showLoadingIndicator(BuildContext context) {
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) => const Center(child: CircularProgressIndicator()),
+  );
+}
 
-  
+void hideLoadingIndicator(BuildContext context) {
+  Navigator.of(context, rootNavigator: true).pop();
+}
 
-  Future<void> fetchStudentData() async {
-    const url = '${APIConstants.baseUrl}/attendance_api/get_student_dashboard_data.php';
+  Future<void> fetchStudentData(BuildContext context) async {
+    setState(() {
+      isLoading = true; // Start loading
+    });
+    
+  // showLoadingIndicator(context);
+    final randomDelay = Random().nextDouble() * 5;
+      // Delay the API request
+      await Future.delayed(Duration(milliseconds: (randomDelay * 1000).toInt()));
+
+    const url = '${APIConstants.baseUrl}/htdocs/attendance_api/get_student_dashboard_data.php';
 
     try {
       final response = await http.post(
@@ -70,15 +90,19 @@ class _StudentDashboardState extends State<StudentDashboard>
               .where((subject) => subject['lec_type'].contains('Lab'))
               .toList();
         });
+         isLoading = false; // Stop loading
       } else {
         setState(() {
           message = responseData['message'];
         });
+         isLoading = false; // Stop loading
       }
+     
     } catch (e) {
       setState(() {
         message = 'Failed to fetch data. Please try again later.';
       });
+       isLoading = false; // Stop loading
     }
   }
 
@@ -132,7 +156,11 @@ appBar: AppBar(
     ),
   ),
 ),
-    body: message.isNotEmpty
+    body:isLoading 
+    ?   const Center(
+              child: CircularProgressIndicator(), // Show loading indicator
+            )
+        : message.isNotEmpty
         ? Center(
             child: Text(
               message,
@@ -179,11 +207,17 @@ appBar: AppBar(
               elevation: 5,
             ),
             onPressed: () async {
+               showLoadingIndicator(context);
+    
+    
           // print(index + 1);
           // print(lecType);
           // print(subject);
+           final randomDelay = Random().nextDouble() * 4;
+      // Delay the API request
+      await Future.delayed(Duration(milliseconds: (randomDelay * 1000).toInt()));
 
-          final url = '${APIConstants.baseUrl}/attendance_api/process_button_click.php';
+          final url = '${APIConstants.baseUrl}/htdocs/attendance_api/process_button_click.php';
 
           try {
             final response = await http.post(
@@ -199,12 +233,14 @@ appBar: AppBar(
             final responseData = jsonDecode(response.body);
 
             if (responseData['success'] == true) {
+               hideLoadingIndicator(context);
               // Pass subjectName and subjectCode to ViewAttendance
               Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => ViewAttendance(
                     className: responseData['subject']['class_name'],
+                    email: widget.email,
                     uuid: widget.uuid,
                     subjectName: subjectName, // Pass the extracted subject name
                     subjectCode: subjectCode, // Pass the extracted subject code
@@ -212,15 +248,19 @@ appBar: AppBar(
                   ),
                 ),
               );
+             
             } else {
               setState(() {
                 message = responseData['message'] ?? 'An error occurred.';
               });
+              hideLoadingIndicator(context);
             }
+            
           } catch (e) {
             setState(() {
               message = 'Network error: $e';
             });
+            hideLoadingIndicator(context);
           }
         },
             child: Text(

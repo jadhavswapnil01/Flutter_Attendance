@@ -7,10 +7,13 @@ import 'constants.dart';
 import 'student_dashboard_new.dart';
 // import 'package:image/image.dart' as img;
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'dart:math'; // To generate random numbers
+import 'dart:async'; // For Future.delayed
 
 class FaceRegistrationScreen extends StatefulWidget {
   final String uuid;
-  const FaceRegistrationScreen({Key? key, required this.uuid}) : super(key: key);
+  final String email; 
+  const FaceRegistrationScreen({Key? key, required this.uuid, required this.email}) : super(key: key);
 
   @override
   _FaceRegistrationScreenState createState() => _FaceRegistrationScreenState();
@@ -43,9 +46,12 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen> {
     try {
       final compressedBytes = await _compressImage(_image!);
       final faceImage = base64Encode(compressedBytes);
+      final randomDelay = Random().nextDouble() * 5;
+      // Delay the API request
+      await Future.delayed(Duration(milliseconds: (randomDelay * 1000).toInt()));
 
       final response = await http.post(
-        Uri.parse('${APIConstants.baseUrl}/attendance_api/register_face.php'),
+        Uri.parse('${APIConstants.baseUrl1}/attendance_api/register_face.php'),
         body: {'uuid': widget.uuid, 'face_image': faceImage},
       );
 
@@ -85,7 +91,7 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen> {
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(
-        builder: (_) => StudentDashboardNew(uuid: widget.uuid),
+        builder: (_) => StudentDashboardNew(uuid: widget.uuid, email: widget.email),
       ),
       (route) => false,
     );

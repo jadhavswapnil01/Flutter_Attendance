@@ -26,15 +26,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Poll Celery for task status
         $status_command = escapeshellcmd("celery -A celery_tasks.tasks result $task_id");
         do {
-            sleep(1);
+            sleep(2);
             $status_output = shell_exec($status_command);
         } while (strpos($status_output, '"state": "SUCCESS"') === false);
-
+        unlink($temp_path);
         $result = json_decode($status_output, true);
         echo json_encode(["match" => $result['match'], "message" => $result['error'] ?? null]);
-        unlink($temp_path);
+        
     } else {
         echo json_encode(["match" => false, "message" => "No face data found."]);
+        
     }
 
     $stmt->close();

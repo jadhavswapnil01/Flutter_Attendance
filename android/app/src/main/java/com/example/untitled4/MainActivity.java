@@ -315,7 +315,7 @@ public void startScanninguuid1(String uuid) {
                     result.getScanRecord().getServiceUuids().contains(targetUuid)) {
                 isTargetFound[0] = true; // Target found
                 scanner.stopScan(this); // Stop scanning immediately
-                Toast.makeText(MainActivity.this, "Beacon found: " + result.getDevice().getAddress(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "Beacon found", Toast.LENGTH_SHORT).show();
                 sendScanResultToFlutter(true);
             }
         }
@@ -336,9 +336,9 @@ public void startScanninguuid1(String uuid) {
         if (!isTargetFound[0]) {
             // If the target UUID wasn't found within 5 seconds
             sendScanResultToFlutter(false);
-            Toast.makeText(MainActivity.this, "You are not in classroom", Toast.LENGTH_SHORT).show();
+            // Toast.makeText(MainActivity.this, "You are not in classroom", Toast.LENGTH_SHORT).show();
         }
-    }, 5000);
+    }, 6000);
 }
 
 // Helper to send scan results to Flutter

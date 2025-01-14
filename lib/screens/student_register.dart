@@ -8,7 +8,16 @@ import '../helpers/database_helper.dart'; // Adjust as per your structure
 import '../screens/student_login.dart';
 import 'constants.dart';
 import 'package:untitled4/screens/background_scaffold.dart';
-
+import 'dart:math'; // To generate random numbers
+import 'dart:async'; 
+// class MyHttpOverrides extends HttpOverrides {
+//   @override
+//   HttpClient createHttpClient(SecurityContext? context) {
+//     return super.createHttpClient(context)
+//       ..badCertificateCallback =
+//           (X509Certificate cert, String host, int port) => true;
+//   }
+// }
 class StudentRegister extends StatefulWidget {
   const StudentRegister({super.key});
 
@@ -30,16 +39,20 @@ class _StudentRegisterState extends State<StudentRegister> {
   bool _isPasswordVisible = false; // For password visibility toggle
   final Uuid uuid = Uuid();
 
+  
+
   @override
   void initState() {
     super.initState();
     _fetchClasses();
   }
-
+  
   Future<void> _fetchClasses() async {
-    const url = '${APIConstants.baseUrl}/attendance_api/get_classes.php';
+    // HttpOverrides.global = MyHttpOverrides();
+    const url = '${APIConstants.baseUrl}/htdocs/attendance_api/get_classes.php';
     try {
       final response = await http.get(Uri.parse(url));
+      // print('Response body: ${response.body}');
       if (response.statusCode == 200) {
         if (mounted) {
           setState(() {
@@ -67,36 +80,71 @@ class _StudentRegisterState extends State<StudentRegister> {
 
   Future<void> _registerStudent() async {
     if (_formKey.currentState!.validate()) {
-      if (_image == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please select an image')),
-        );
-        return;
-      }
+      // if (_image == null) {
+      //   ScaffoldMessenger.of(context).showSnackBar(
+      //     const SnackBar(content: Text('Please select an image')),
+      //   );
+      //   return;
+      // }
       setState(() {
         _isLoading = true;
       });
-
-      final String studentUuid = uuid.v4();
-      final uri = Uri.parse('${APIConstants.baseUrl}/attendance_api/student_register.php');
+      final randomDelay = Random().nextDouble() * 5;
+      // Delay the API request
+      await Future.delayed(Duration(milliseconds: (randomDelay * 1000).toInt()));
+    final String studentUuid = uuid.v4();
+      final uri1 = Uri.parse('${APIConstants.baseUrl1}/attendance_api/student_register.php');
+       var request1 = http.MultipartRequest('POST', uri1)
+        ..fields['username'] = _usernameController.text
+        ..fields['password'] = _passwordController.text
+        ..fields['prn'] = _prnController.text
+        ..fields['email'] = _emailController.text
+        ..fields['uuid'] = studentUuid
+        ..fields['class_id'] = _selectedClassId ?? '';
+        try {
+        var response1 = await request1.send();
+        if (response1.statusCode == 200) {
+          // await DatabaseHelper.saveStudent({
+          //   'username': _usernameController.text,
+          //   'prn': _prnController.text,
+          //   'email': _emailController.text,
+          //   'uuid': studentUuid,
+          // });
+        }else{
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to register student.')),
+          );
+          return;}
+        }catch (e) {
+        debugPrint('Error: $e');
+        return;
+      }
+    // HttpOverrides.global = MyHttpOverrides();
+      final randomDelay2 = Random().nextDouble() * 2;
+      // Delay the API request
+      await Future.delayed(Duration(milliseconds: (randomDelay2 * 1000).toInt()));
+      final uri = Uri.parse('${APIConstants.baseUrl}/htdocs/attendance_api/student_register.php');
       var request = http.MultipartRequest('POST', uri)
         ..fields['username'] = _usernameController.text
         ..fields['password'] = _passwordController.text
         ..fields['prn'] = _prnController.text
         ..fields['email'] = _emailController.text
         ..fields['uuid'] = studentUuid
-        ..fields['class_id'] = _selectedClassId ?? ''
-        ..files.add(await http.MultipartFile.fromPath('image', _image!.path));
-
+        ..fields['class_id'] = _selectedClassId ?? '';
+        // ..files.add(await http.MultipartFile.fromPath('image', _image!.path));
+      // HttpOverrides.global = MyHttpOverrides();
+       
       try {
         var response = await request.send();
         if (response.statusCode == 200) {
-          await DatabaseHelper.saveStudent({
+          final dbHelper = DatabaseHelper.instance;
+          await dbHelper.saveStudent({
             'username': _usernameController.text,
             'prn': _prnController.text,
             'email': _emailController.text,
             'uuid': studentUuid,
           });
+          
 
           _clearForm();
 
@@ -116,11 +164,9 @@ class _StudentRegisterState extends State<StudentRegister> {
         }
       } catch (e) {
         debugPrint('Error: $e');
-      } finally {
-        setState(() {
-          _isLoading = false;
-        });
       }
+     
+      
     }
   }
 
@@ -225,37 +271,8 @@ class _StudentRegisterState extends State<StudentRegister> {
                     ),
                     validator: (value) => value == null ? 'Please select a class' : null,
                   ),
-                  const SizedBox(height: 20),
-                  _image != null
-                      ? Column(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: Image.file(
-                                _image!,
-                                height: 150,
-                                width: 150,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                            TextButton(
-                              onPressed: _pickImage,
-                              child: const Text('Change Image'),
-                            ),
-                          ],
-                        )
-                      : ElevatedButton(
-                          onPressed: _pickImage,
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 10),
-                            backgroundColor: const Color(0xFF673AB7),
-                          ),
-                          child: const Text(
-                            'Pick Image',
-                            style: TextStyle(fontSize: 17, color: Colors.white),
-                          ),
-                        ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 30),
+                  
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
