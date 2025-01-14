@@ -1,7 +1,7 @@
 import 'dart:convert';
 // import 'dart:ffi';
 import 'dart:io';
-// import 'dart:math';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'constants.dart';
@@ -15,10 +15,12 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:untitled4/screens/student_dashboard.dart';
 // import 'package:image/image.dart' as img;
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'dart:async'; // For Future.delayed
 
 
 
 class ViewAttendance extends StatefulWidget {
+  final String email;
   final String? uuid;
   final String? subjectName;
   final String? subjectCode;
@@ -28,6 +30,7 @@ class ViewAttendance extends StatefulWidget {
 
   const ViewAttendance({
     Key? key,
+    required this.email,
     required this.uuid,
     required this.subjectName,
     required this.subjectCode,
@@ -53,13 +56,16 @@ class _ViewAttendanceState extends State<ViewAttendance> {
   void initState() {
     super.initState();
     fetchClassroomStatus();
-    fetchAttendanceInfo();
+    
     // fetchSSID(); 
   }
 
    Future<void> fetchSSID(int classroomId) async {
+    final randomDelay = Random().nextDouble() * 3;
+      // Delay the API request
+      await Future.delayed(Duration(milliseconds: (randomDelay * 1000).toInt()));
     
-    final response = await http.get(Uri.parse('${APIConstants.baseUrl}/attendance_api/fetch_ssid_Buuid_student.php?classroom_id=$classroomId'));
+    final response = await http.get(Uri.parse('${APIConstants.baseUrl}/htdocs/attendance_api/fetch_ssid_Buuid_student.php?classroom_id=$classroomId'));
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
@@ -70,7 +76,12 @@ class _ViewAttendanceState extends State<ViewAttendance> {
           // print(uuidBluetooth);
           // print(ssid);
         });
+        await fetchAttendanceInfo();
       
+      }else{
+        setState(() {
+          isLoading = false;
+        });
       }
     
   }
@@ -79,8 +90,12 @@ class _ViewAttendanceState extends State<ViewAttendance> {
   
 
   Future<void> fetchClassroomStatus() async {
+    
+    final randomDelay = Random().nextDouble() * 3;
+      // Delay the API request
+      await Future.delayed(Duration(milliseconds: (randomDelay * 1000).toInt()));
     final response = await http.post(
-      Uri.parse('${APIConstants.baseUrl}/attendance_api/getClassroomStatus.php'),
+      Uri.parse('${APIConstants.baseUrl}/htdocs/attendance_api/getClassroomStatus.php'),
       body: {
         'class_name': widget.className,
         'subject_code': widget.subjectCode,
@@ -91,10 +106,13 @@ class _ViewAttendanceState extends State<ViewAttendance> {
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       setState(() {
-        isAttendanceActive = data['online_attendance_status'] == 'active';
+        // isAttendanceActive = data['online_attendance_status'] == 'active';
         classroomId = data['classroom_id'];
         // print(classroomId);
-        fetchSSID(classroomId);
+      });
+      await fetchSSID(classroomId);
+      setState(() {
+        isAttendanceActive = data['online_attendance_status'] == 'active';
       });
     } else {
       showError('Failed to fetch classroom status');
@@ -125,9 +143,12 @@ class _ViewAttendanceState extends State<ViewAttendance> {
   
 
   Future<void> fetchAttendanceInfo() async {
+    final randomDelay = Random().nextDouble() * 3;
+      // Delay the API request
+      await Future.delayed(Duration(milliseconds: (randomDelay * 1000).toInt()));
     try {
       final response = await http.post(
-        Uri.parse('${APIConstants.baseUrl}/attendance_api/getAttendanceInfo.php'),
+        Uri.parse('${APIConstants.baseUrl}/htdocs/attendance_api/getAttendanceInfo.php'),
         body: {
           'uuid': widget.uuid,
           'class_name': widget.className,
@@ -143,15 +164,26 @@ class _ViewAttendanceState extends State<ViewAttendance> {
           setState(() {
             attendanceInfo = data['attendance'];
           });
+        //  await fetchClassroomStatus();
+          setState(() {
+        isLoading = false;
+      });
+         
         } else {
           showError(data['message'] ?? 'Failed to fetch attendance info');
+           setState(() {
+        isLoading = false;
+      });
         }
+       
       } else {
         showError('Failed to fetch attendance info (HTTP ${response.statusCode})');
+        setState(() {
+        isLoading = false;
+      });
       }
     } catch (e) {
       showError('An error occurred: $e');
-    } finally {
       setState(() {
         isLoading = false;
       });
@@ -199,9 +231,11 @@ showLoadingIndicator(context);
   try {
     final compressedBytes = await _compressImage(image);
     final faceImage = base64Encode(compressedBytes);
-
+    final randomDelay = Random().nextDouble() * 5;
+      // Delay the API request
+      await Future.delayed(Duration(milliseconds: (randomDelay * 1000).toInt()));
     final response = await http.post(
-      Uri.parse('${APIConstants.baseUrl}/attendance_api/verify_face.php'),
+      Uri.parse('${APIConstants.baseUrl1}/attendance_api/verify_face.php'),
       body: {
         'uuid': uuid,
         'face_image': faceImage,
@@ -270,8 +304,8 @@ Future<bool> _requestCameraPermission() async {
 Future<void> markAttendanceWithRSSI(String ssid) async {
   fetchClassroomStatus();
 
-  
- final bool uuidExists = await DatabaseHelper.doesUuidExist(widget.uuid!);
+   final dbHelper = DatabaseHelper.instance;
+ final bool uuidExists = await dbHelper.doesUuidExist(widget.uuid!,widget.email);
   if (uuidExists) { 
 if(isAttendanceActive){
    bool hasPermission = await _requestCameraPermission();
@@ -312,7 +346,7 @@ if(isAttendanceActive){
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (_) => StudentDashboard(uuid: widget.uuid!),
+        builder: (_) => StudentDashboard(uuid: widget.uuid!, email: widget.email),
       ),
     );
   }
@@ -321,8 +355,15 @@ if(isAttendanceActive){
 
 
   Future<void> markAttendance() async {
+    
+      // Delay the API request
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Authentication Sucessful. Marking Attendance...')),
+      );
+      final randomDelay = Random().nextDouble() * 3;
+      await Future.delayed(Duration(milliseconds: (randomDelay * 1000).toInt()));
     final response = await http.post(
-      Uri.parse('${APIConstants.baseUrl}/attendance_api/markAttendance.php'),
+      Uri.parse('${APIConstants.baseUrl}/htdocs/attendance_api/markAttendance.php'),
       body: {
         'classroom_id': classroomId.toString(),
         'uuid': widget.uuid,

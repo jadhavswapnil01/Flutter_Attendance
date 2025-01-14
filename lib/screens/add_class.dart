@@ -1,7 +1,18 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'constants.dart';
 import 'package:untitled4/screens/background_scaffold.dart';
+
+class MyHttpOverrides extends HttpOverrides {
+  @override
+  HttpClient createHttpClient(SecurityContext? context) {
+    return super.createHttpClient(context)
+      ..badCertificateCallback =
+          (X509Certificate cert, String host, int port) => true;
+  }
+}
 
 class AddClassScreen extends StatefulWidget {
   const AddClassScreen({super.key});
@@ -20,9 +31,9 @@ class _AddClassScreenState extends State<AddClassScreen> {
     setState(() {
       _isLoading = true;
     });
-
+  HttpOverrides.global = MyHttpOverrides();
     final response = await http.post(
-      Uri.parse('${APIConstants.baseUrl}/attendance_api/add_class.php'),
+      Uri.parse('${APIConstants.baseUrl}/htdocs/attendance_api/add_class.php'),
       body: {
         'class_name': _classNameController.text,
         'subjects': _subjectsController.text,

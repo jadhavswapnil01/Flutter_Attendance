@@ -27,7 +27,7 @@ class _TeacherRegisterState extends State<TeacherRegister> {
         _isLoading = true;
       });
 
-      final uri = Uri.parse('${APIConstants.baseUrl}/attendance_api/teacher_register.php');
+      final uri = Uri.parse('${APIConstants.baseUrl}/htdocs/attendance_api/teacher_register.php');
       var request = http.MultipartRequest('POST', uri)
         ..fields['username'] = _usernameController.text
         ..fields['password'] = _passwordController.text

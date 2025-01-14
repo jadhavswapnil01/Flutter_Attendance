@@ -1,4 +1,5 @@
 import 'dart:convert';
+// import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 // import './student_dashboard.dart';
@@ -6,6 +7,17 @@ import 'constants.dart';
 import 'background_scaffold.dart';
 import 'student_register.dart';
 import 'student_dashboard_new.dart';
+import 'dart:math'; // To generate random numbers
+import 'dart:async'; // For Future.delayed
+
+// class MyHttpOverrides extends HttpOverrides {
+//   @override
+//   HttpClient createHttpClient(SecurityContext? context) {
+//     return super.createHttpClient(context)
+//       ..badCertificateCallback =
+//           (X509Certificate cert, String host, int port) => true;
+//   }
+// }
 
 class StudentLogin extends StatefulWidget {
   const StudentLogin({super.key});
@@ -22,6 +34,7 @@ class _StudentLoginState extends State<StudentLogin> {
   bool _isPasswordVisible = false; // Password visibility toggle
 
   Future<void> loginUser() async {
+    
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
@@ -31,13 +44,14 @@ class _StudentLoginState extends State<StudentLogin> {
       });
       return;
     }
-
-    const url = '${APIConstants.baseUrl}/attendance_api/login.php';
-
     setState(() {
       _isLoading = true;
     });
-
+    final randomDelay = Random().nextDouble() * 4;
+      // Delay the API request
+    await Future.delayed(Duration(milliseconds: (randomDelay * 1000).toInt()));
+  // HttpOverrides.global = MyHttpOverrides();
+    const url = '${APIConstants.baseUrl}/htdocs/attendance_api/login.php';
     try {
       final response = await http.post(
         Uri.parse(url),
@@ -53,12 +67,12 @@ class _StudentLoginState extends State<StudentLogin> {
         final uuid = responseData['uuid'];
         if (responseData['success'] == true) {
           setState(() {
-            message = 'Login Successful!';
+            message = '';
           });
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (_) => StudentDashboardNew(uuid: uuid),
+              builder: (_) => StudentDashboardNew(uuid: uuid, email:_emailController.text.trim() ),
             ),
           );
         } else {

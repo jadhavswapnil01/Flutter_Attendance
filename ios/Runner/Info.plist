@@ -7,6 +7,8 @@
 
 <key>NSPhotoLibraryUsageDescription</key>
 <string>We need access to your photo library to select an image.</string>
+<key>NSDocumentsFolderUsageDescription</key>
+<string>This app requires access to documents for storing user data securely.</string>
 
 <key>NSMicrophoneUsageDescription</key>
 <string>We need access to your microphone (if using audio features).</string>
@@ -16,7 +18,10 @@
     <key>NSAllowsArbitraryLoads</key>
     <true/>
 </dict>
-
+<key>UIFileSharingEnabled</key>
+<true/>
+<key>LSSupportsOpeningDocumentsInPlace</key>
+<true/>
 <key>UIBackgroundModes</key>
 <array>
     <string>fetch</string>

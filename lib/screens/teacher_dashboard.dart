@@ -52,7 +52,7 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
   }
 Future<String?> fetchSSIDFromDatabase() async {
   final response = await http.post(
-    Uri.parse('${APIConstants.baseUrl}/attendance_api/get_hotspot_ssid.php'),
+    Uri.parse('${APIConstants.baseUrl}/htdocs/attendance_api/get_hotspot_ssid.php'),
     body: {'email': widget.email},
   );
   
@@ -88,7 +88,7 @@ Future<void> checkHotspotStatus() async {
 
 Future<void> updateHotspotSSIDInDatabase(String ssid) async {
   final response = await http.post(
-    Uri.parse('${APIConstants.baseUrl}/attendance_api/update_hotspot_ssid.php'),
+    Uri.parse('${APIConstants.baseUrl}/htdocs/attendance_api/update_hotspot_ssid.php'),
     body: {
       'email': widget.email,
       'ssid': ssid,
@@ -98,7 +98,7 @@ Future<void> updateHotspotSSIDInDatabase(String ssid) async {
 
   Future<void> fetchClasses() async {
     final response = await http.get(Uri.parse(
-        '${APIConstants.baseUrl}/attendance_api/get_classes.php'));
+        '${APIConstants.baseUrl}/htdocs/attendance_api/get_classes.php'));
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       setState(() {
@@ -114,7 +114,7 @@ Future<void> updateHotspotSSIDInDatabase(String ssid) async {
 
   Future<void> fetchSubjectNames(String classId) async {
     final response = await http.get(Uri.parse(
-        '${APIConstants.baseUrl}/attendance_api/get_subjectnames_teacher.php?class_id=$classId'));
+        '${APIConstants.baseUrl}/htdocs/attendance_api/get_subjectnames_teacher.php?class_id=$classId'));
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       if (data['success']) {
@@ -127,7 +127,7 @@ Future<void> updateHotspotSSIDInDatabase(String ssid) async {
 
     Future<void> fetchLectureTypes(String subjectId) async {
     final response = await http.get(Uri.parse(
-        '${APIConstants.baseUrl}/attendance_api/get_lecture_types.php?subject_id=$subjectId'));
+        '${APIConstants.baseUrl}/htdocs/attendance_api/get_lecture_types.php?subject_id=$subjectId'));
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
@@ -142,7 +142,7 @@ Future<void> updateHotspotSSIDInDatabase(String ssid) async {
 
   Future<void> fetchSubjectCode(String subjectId) async {
   final response = await http.get(Uri.parse(
-        '${APIConstants.baseUrl}/attendance_api/get_subjectcodes_teacher.php?subject_id=$subjectId'));
+        '${APIConstants.baseUrl}/htdocs/attendance_api/get_subjectcodes_teacher.php?subject_id=$subjectId'));
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
@@ -182,7 +182,7 @@ Future<void> updateHotspotSSIDInDatabase(String ssid) async {
         
 
     final response = await http.post(
-      Uri.parse('${APIConstants.baseUrl}/attendance_api/create_classroom.php'),
+      Uri.parse('${APIConstants.baseUrl}/htdocs/attendance_api/create_classroom.php'),
       body: {
         'email': widget.email,
         'class_name': selectedClassName,
@@ -213,7 +213,7 @@ Future<void> updateHotspotSSIDInDatabase(String ssid) async {
   }
 
   Future<bool> updateUUID(String email, String uuid) async {
-  final url = Uri.parse("${APIConstants.baseUrl}/attendance_api/update_uuid.php"); // Replace with your server URL
+  final url = Uri.parse("${APIConstants.baseUrl}/htdocs/attendance_api/update_uuid.php"); // Replace with your server URL
 
   try {
     final response = await http.post(
@@ -256,7 +256,7 @@ Future<void> updateHotspotSSIDInDatabase(String ssid) async {
             classItem['id'].toString() == selectedClassId)['class_name'];
 
     final response = await http.post(
-      Uri.parse('${APIConstants.baseUrl}/attendance_api/update_attendance_status.php'),
+      Uri.parse('${APIConstants.baseUrl}/htdocs/attendance_api/update_attendance_status.php'),
       body: {
         'class_name': selectedClassName,
         'subject_code': subjectCode,
@@ -274,7 +274,7 @@ Future<void> updateHotspotSSIDInDatabase(String ssid) async {
 
         if (!beaconStarted) {
           await http.post(
-            Uri.parse('${APIConstants.baseUrl}/attendance_api/update_attendance_status.php'),
+            Uri.parse('${APIConstants.baseUrl}/htdocs/attendance_api/update_attendance_status.php'),
             body: {
               'class_name': selectedClassName,
               'subject_code': subjectCode,
@@ -357,9 +357,11 @@ Future<void> updateHotspotSSIDInDatabase(String ssid) async {
   }
 
   Widget buildCreateClassroomSection() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
+  return Padding(
+    padding: const EdgeInsets.all(16.0),
+    child: SingleChildScrollView( // Wrap the Column with SingleChildScrollView
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start, // Optional for better alignment
         children: [
           const SizedBox(height: 80),
           const Text(
@@ -368,18 +370,17 @@ Future<void> updateHotspotSSIDInDatabase(String ssid) async {
           ),
           const SizedBox(height: 20),
           buildCustomTextField('Enter Classroom Number', _classroomnumberController),
-          const SizedBox(height: 20),
+          const SizedBox(height: 30),
           buildCustomDropdown(
-            'Select Class',
-            selectedClassId,
-            classes.map((classItem) {
+           hintText:  'Select Class',
+           value:  selectedClassId,
+           items:  classes.map((classItem) {
               return DropdownMenuItem(
                 value: classItem['id'].toString(),
                 child: Text(classItem['class_name']),
               );
             }).toList(),
-            
-            (value) {
+           onChanged: (value) {
               setState(() {
                 selectedClassId = value;
                 selectedSubjectNameId = null; // Reset dependent dropdown
@@ -388,32 +389,17 @@ Future<void> updateHotspotSSIDInDatabase(String ssid) async {
               });
             },
           ),
-          SizedBox(height: 20),
-        
-          // Ensure the TextField allows editing
-          TextField(
-            controller: _ssidController,
-            decoration: InputDecoration(labelText: 'Enter Your Hotspot Name'),
-            onChanged: (value) {
-              setState(() {
-                hotspotSSID = value; 
-                updateHotspotSSIDInDatabase(value); // Update the SSID in the database
-                
-              });
-            },
-          ),
-       
-          const SizedBox(height: 20),
+          const SizedBox(height: 30),
           buildCustomDropdown(
-            'Select Subject',
-            selectedSubjectNameId,
-            subjectnames.map((subject) {
+           hintText:  'Select Subject',
+           value:  selectedSubjectNameId,
+           items:  subjectnames.map((subject) {
               return DropdownMenuItem(
                 value: subject['id'].toString(),
-                child: Text(subject['subject_name']),
+                child: Text(subject['subject_name'], overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 10)),
               );
             }).toList(),
-            (value) {
+          onChanged:  (value) {
               setState(() {
                 selectedSubjectNameId = value;
                 selectedLectureType = null;  // Reset dependent dropdown
@@ -422,56 +408,58 @@ Future<void> updateHotspotSSIDInDatabase(String ssid) async {
               });
             },
           ),
-          const SizedBox(height: 10),
-                TextFormField(
-                  enabled: false,
-                  controller: _subjectcodeController,
-                  decoration: InputDecoration(
-                    labelText: 'Subject Code',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                  ),
-                ),
-                const SizedBox(height: 20),
+          const SizedBox(height: 30),
+          TextFormField(
+            enabled: false,
+            controller: _subjectcodeController,
+            decoration: InputDecoration(
+              labelText: 'Subject Code',
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+          ),
+          const SizedBox(height: 30),
           buildCustomDropdown(
-            'Select Lecture Type',
-            selectedLectureType,
-            lectureTypes.map((lecType) {
+           hintText:  'Select Lecture Type',
+           value:  selectedLectureType,
+           items:  lectureTypes.map((lecType) {
               return DropdownMenuItem(
                 value: lecType,
                 child: Text(lecType),
               );
             }).toList(),
-            (value) {
+          onChanged: (value) {
               setState(() {
                 selectedLectureType = value;
               });
             },
           ),
-          const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: createClassroom,
-            
-            style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16,horizontal:25),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    backgroundColor: const Color(0xFF673AB7),
-                  ),
-            
-            child: _isLoading
-                ? const CircularProgressIndicator(color: Colors.white)
-                : const Text('Create',
-                style: TextStyle(fontSize: 16, color: Colors.white),
-                ),
-                
-          ),
-          
-        ],
-        
+          const SizedBox(height: 30),
+          Center(
+  child: ElevatedButton(
+    onPressed: createClassroom,
+    style: ElevatedButton.styleFrom(
+      alignment: Alignment.center,
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 25),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
       ),
-    );
-  }
+      backgroundColor: const Color(0xFF673AB7),
+    ),
+    child: _isLoading
+        ? const CircularProgressIndicator(color: Colors.white)
+        : const Text(
+            'Create',
+            style: TextStyle(fontSize: 16, color: Colors.white),
+            textAlign: TextAlign.center,
+          ),
+  ),
+)
+        ],
+      ),
+    ),
+  );
+}
+
 
 
  Widget _buildBeaconConfigButtons() {
@@ -513,7 +501,7 @@ Future<void> updateHotspotSSIDInDatabase(String ssid) async {
                 ? Colors.green
                 : const Color.fromARGB(255, 255, 255, 255),
           ),
-          child: Text(configName, textAlign: TextAlign.center),
+          child: Text(configName, textAlign: TextAlign.center, style: const TextStyle(fontSize: 10)),
         );
       },
     );
@@ -550,9 +538,9 @@ Widget buildManageAttendanceSection() {
                 ),
               )
             : const Text('No class created yet.'),
-       const SizedBox(height: 20),
+       const SizedBox(height: 0),
           _buildBeaconConfigButtons(),
-          const SizedBox(height: 20),
+          const SizedBox(height: 30),
           ElevatedButton(
             onPressed: _selectedChannel == null
                 ? null
@@ -579,7 +567,7 @@ Widget buildManageAttendanceSection() {
               _isAttendanceActive
                   ? 'Deactivate Online Attendance'
                   : 'Activate Online Attendance',
-              style: const TextStyle(fontSize: 18, color: Colors.white),
+              style: const TextStyle(fontSize: 13, color: Colors.white),
             ),
           ),
           const SizedBox(height: 20),
@@ -637,7 +625,7 @@ void dispose() {
   Widget buildCustomTextField(String hintText, TextEditingController controller) {
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.black, width: 1),
+        border: Border.all(color: Colors.transparent, width: 1),
         borderRadius: BorderRadius.circular(10),
       ),
       padding: const EdgeInsets.all(8),
@@ -651,21 +639,26 @@ void dispose() {
     );
   }
 
-  Widget buildCustomDropdown(String hintText, String? value, List<DropdownMenuItem<String>> items, ValueChanged<String?> onChanged) {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.black, width: 1),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: DropdownButton<String>(
-        value: value,
-        hint: Text(hintText),
-        isExpanded: true,
-        underline: const SizedBox(),
-        items: items,
-        onChanged: onChanged,
-      ),
-    );
-  }
+ Widget buildCustomDropdown({
+  required String hintText,
+  required String? value,
+  required List<DropdownMenuItem<String>> items,
+  required ValueChanged<String?> onChanged,
+}) {
+  return DropdownButton<String>(
+    value: value,
+    hint: Text(hintText),
+    isExpanded: true,
+    underline: Container(
+      height: 1,
+      color: Colors.black,
+    ),
+    items: items,
+    onChanged: onChanged,
+    style: const TextStyle(fontSize: 16, color: Colors.black),
+    borderRadius: BorderRadius.circular(10),
+    dropdownColor: Colors.white,
+  );
+}
+
 }

@@ -28,7 +28,7 @@ class _TeacherLoginState extends State<TeacherLogin> {
 
     try {
       final response = await http.post(
-        Uri.parse('${APIConstants.baseUrl}/attendance_api/teacher_login.php'),
+        Uri.parse('${APIConstants.baseUrl}/htdocs/attendance_api/teacher_login.php'),
         body: {'email': email, 'password': password},
       );
 

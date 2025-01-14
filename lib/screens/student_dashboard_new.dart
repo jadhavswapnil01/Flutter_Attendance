@@ -5,8 +5,8 @@ import 'package:untitled4/screens/background_scaffold.dart';
 
 class StudentDashboardNew extends StatelessWidget {
   final String uuid;
-
-  const StudentDashboardNew({Key? key, required this.uuid}) : super(key: key);
+  final String email;
+  const StudentDashboardNew({Key? key, required this.uuid, required this.email}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +56,7 @@ class StudentDashboardNew extends StatelessWidget {
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => StudentDashboard(uuid: uuid),
+                              builder: (_) => StudentDashboard(uuid: uuid, email: email),
                             ),
                           );
                         },
@@ -68,7 +68,7 @@ class StudentDashboardNew extends StatelessWidget {
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => FaceRegistrationScreen(uuid: uuid),
+                              builder: (_) => FaceRegistrationScreen(uuid: uuid, email: email),
                             ),
                           );
                         },
