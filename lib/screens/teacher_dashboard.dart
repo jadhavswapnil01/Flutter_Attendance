@@ -1,13 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:location/location.dart';
+import 'package:location/location.dart' as loc;
 import 'package:http/http.dart' as http;
 import 'constants.dart';
 import 'package:wifi_iot/wifi_iot.dart';
 import 'package:untitled4/screens/background_scaffold.dart';
 import 'package:uuid/uuid.dart';
 import 'package:flutter/services.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 
 class TeacherDashboard extends StatefulWidget {
@@ -164,7 +165,7 @@ Future<void> updateHotspotSSIDInDatabase(String ssid) async {
       setState(() => _isLoading = false);
       return;
     }
-    Location location = Location();
+    loc.Location location = loc.Location();
     bool hasPermission = await location.serviceEnabled() || await location.requestService();
 
     if (!hasPermission) {
@@ -243,6 +244,28 @@ Future<void> updateHotspotSSIDInDatabase(String ssid) async {
   }
 }
   Future<void> toggleOnlineAttendance() async {
+    // Check and request necessary permissions
+  final List<Permission> requiredPermissions = [
+    Permission.location,
+    Permission.bluetooth,
+    Permission.bluetoothScan,
+    Permission.bluetoothAdvertise,
+    Permission.bluetoothConnect,
+    Permission.camera,
+    Permission.storage, // For Android 10 and below
+    Permission.manageExternalStorage, // For Android 11+
+  ];
+
+  // Request all permissions
+  Map<Permission, PermissionStatus> statuses = await requiredPermissions.request();
+
+  // Check if any permission is denied
+  bool allPermissionsGranted = statuses.values.every((status) => status.isGranted);
+  if (!allPermissionsGranted) {
+    // Show a popup or navigate to settings if permissions are denied
+    // showError('Please grant all required permissions.');
+    return;
+  }
     if (_selectedChannel == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Select a beacon configuration first.")),

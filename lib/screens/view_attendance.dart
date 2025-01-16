@@ -15,7 +15,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:untitled4/screens/student_dashboard.dart';
 // import 'package:image/image.dart' as img;
 import 'package:flutter_image_compress/flutter_image_compress.dart';
-import 'dart:async'; // For Future.delayed
+// import 'dart:async'; // For Future.delayed
 
 
 
@@ -219,14 +219,7 @@ showLoadingIndicator(context);
 
   final File image = File(pickedFile.path);
 
-  // Show loading indicator
-  // showDialog(
-  //   context: context,
-  //   barrierDismissible: false,
-  //   builder: (_) => const Center(child: CircularProgressIndicator()),
-  // );
   
-// showLoadingIndicator(context);
   
   try {
     final compressedBytes = await _compressImage(image);
@@ -280,11 +273,7 @@ void hideLoadingIndicator(BuildContext context) {
 
 
 
-// double calculateFaceDistance(Map<String, dynamic> face1, Map<String, dynamic> face2) {
-//   final double dx = face1["centerX"] - face2["centerX"];
-//   final double dy = face1["centerY"] - face2["centerY"];
-//   return sqrt(dx * dx + dy * dy);
-// }
+
 
  void _showSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
@@ -302,6 +291,28 @@ Future<bool> _requestCameraPermission() async {
 
 
 Future<void> markAttendanceWithRSSI(String ssid) async {
+  // Check and request necessary permissions
+  final List<Permission> requiredPermissions = [
+    Permission.location,
+    Permission.bluetooth,
+    Permission.bluetoothScan,
+    Permission.bluetoothAdvertise,
+    Permission.bluetoothConnect,
+    Permission.camera,
+    Permission.storage, // For Android 10 and below
+    Permission.manageExternalStorage, // For Android 11+
+  ];
+
+  // Request all permissions
+  Map<Permission, PermissionStatus> statuses = await requiredPermissions.request();
+
+  // Check if any permission is denied
+  bool allPermissionsGranted = statuses.values.every((status) => status.isGranted);
+  if (!allPermissionsGranted) {
+    // Show a popup or navigate to settings if permissions are denied
+    showError('Please grant all required permissions.');
+    return;
+  }
   fetchClassroomStatus();
 
    final dbHelper = DatabaseHelper.instance;
