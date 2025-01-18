@@ -12,15 +12,18 @@
 <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
 <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
+
 <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" android:required="false"/>
 <uses-feature android:name="android.hardware.bluetooth_le"/>
 
     <application
-        android:label="untitled4"
+        android:label="ScanIn"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        
         <activity
             android:name=".MainActivity"
+            android:hasFragileUserData="true"
             android:exported="true"
             android:launchMode="singleTop"
             android:taskAffinity=""

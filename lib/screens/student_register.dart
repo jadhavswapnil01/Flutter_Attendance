@@ -1,7 +1,6 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
+
 import 'package:http/http.dart' as http;
 import 'package:uuid/uuid.dart';
 import '../helpers/database_helper.dart'; // Adjust as per your structure
@@ -10,14 +9,7 @@ import 'constants.dart';
 import 'package:untitled4/screens/background_scaffold.dart';
 import 'dart:math'; // To generate random numbers
 import 'dart:async'; 
-// class MyHttpOverrides extends HttpOverrides {
-//   @override
-//   HttpClient createHttpClient(SecurityContext? context) {
-//     return super.createHttpClient(context)
-//       ..badCertificateCallback =
-//           (X509Certificate cert, String host, int port) => true;
-//   }
-// }
+
 class StudentRegister extends StatefulWidget {
   const StudentRegister({super.key});
 
@@ -31,8 +23,8 @@ class _StudentRegisterState extends State<StudentRegister> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _prnController = TextEditingController();
-  File? _image;
-  final ImagePicker _picker = ImagePicker();
+  // File? _image;
+  // final ImagePicker _picker = ImagePicker();
   List<Map<String, dynamic>> _classes = [];
   String? _selectedClassId;
   bool _isLoading = false;
@@ -69,14 +61,14 @@ class _StudentRegisterState extends State<StudentRegister> {
     }
   }
 
-  Future<void> _pickImage() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      setState(() {
-        _image = File(pickedFile.path);
-      });
-    }
-  }
+  // Future<void> _pickImage() async {
+  //   final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+  //   if (pickedFile != null) {
+  //     setState(() {
+  //       _image = File(pickedFile.path);
+  //     });
+  //   }
+  // }
 
   Future<void> _registerStudent() async {
     if (_formKey.currentState!.validate()) {
@@ -175,7 +167,7 @@ class _StudentRegisterState extends State<StudentRegister> {
     _emailController.clear();
     _passwordController.clear();
     _prnController.clear();
-    _image = null;
+    // _image = null;
     _selectedClassId = null;
   }
 

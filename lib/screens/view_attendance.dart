@@ -15,7 +15,9 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:untitled4/screens/student_dashboard.dart';
 // import 'package:image/image.dart' as img;
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+// import 'package:geolocator/geolocator.dart';
 // import 'dart:async'; // For Future.delayed
+import 'package:location/location.dart'as loc;
 
 
 
@@ -299,12 +301,17 @@ Future<void> markAttendanceWithRSSI(String ssid) async {
     Permission.bluetoothAdvertise,
     Permission.bluetoothConnect,
     Permission.camera,
+    // Permission.storage, // For Android 10 and below
+    // Permission.manageExternalStorage, // For Android 11+
+  ];
+  final List<Permission> requiredPermissions1 = [
     Permission.storage, // For Android 10 and below
     Permission.manageExternalStorage, // For Android 11+
   ];
 
   // Request all permissions
   Map<Permission, PermissionStatus> statuses = await requiredPermissions.request();
+  await requiredPermissions1.request();
 
   // Check if any permission is denied
   bool allPermissionsGranted = statuses.values.every((status) => status.isGranted);
@@ -313,6 +320,22 @@ Future<void> markAttendanceWithRSSI(String ssid) async {
     showError('Please grant all required permissions.');
     return;
   }
+
+  // Check if location services are enabled
+  // Create a Location instance
+  loc.Location location = loc.Location();
+
+  // Check if location services are enabled
+  bool isLocationEnabled = await location.serviceEnabled();
+  if (!isLocationEnabled) {
+    // Show popup to enable location
+    isLocationEnabled = await location.requestService();
+    if (!isLocationEnabled) {
+      showError('Location services are required to proceed.');
+      return;
+    }
+  }
+  
   fetchClassroomStatus();
 
    final dbHelper = DatabaseHelper.instance;

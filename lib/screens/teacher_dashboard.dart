@@ -252,12 +252,17 @@ Future<void> updateHotspotSSIDInDatabase(String ssid) async {
     Permission.bluetoothAdvertise,
     Permission.bluetoothConnect,
     Permission.camera,
+    // Permission.storage, // For Android 10 and below
+    // Permission.manageExternalStorage, // For Android 11+
+  ];
+  final List<Permission> requiredPermissions1 = [
     Permission.storage, // For Android 10 and below
     Permission.manageExternalStorage, // For Android 11+
   ];
 
   // Request all permissions
   Map<Permission, PermissionStatus> statuses = await requiredPermissions.request();
+  await requiredPermissions1.request();
 
   // Check if any permission is denied
   bool allPermissionsGranted = statuses.values.every((status) => status.isGranted);
