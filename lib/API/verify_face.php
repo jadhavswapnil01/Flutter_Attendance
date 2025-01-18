@@ -1,11 +1,16 @@
 <?php
+// header('Content-Type: application/json');
+
 include("connect.php");
-$conn = dbconnection();
+$conn = dbconnection(); // Include your database connection file
+error_reporting(E_ERROR | E_PARSE);
+
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $uuid = $_POST['uuid'];
     $face_image = $_POST['face_image'];
 
+    // Fetch stored face encoding
     $sql = "SELECT face_image FROM students WHERE uuid = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("s", $uuid);
@@ -14,31 +19,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt->fetch();
 
     if ($stored_path) {
+        // Save captured image temporarily
         $temp_path = 'C:/Users/swapn/Videos/attendancesysBluetoothOnly/Flutter_Attendance/lib/API/registered_faces/'.uniqid().'.jpg';
         if (file_put_contents($temp_path, base64_decode($face_image)) === false) {
             echo json_encode(["match" => false, "message" => "Failed to save temporary image."]);
             exit;
         }
 
-        $command = escapeshellcmd("celery -A celery_tasks.tasks call compare_faces --args='[\"$temp_path\", \"$stored_path\"]'");
-        $task_id = shell_exec($command);
+        // Escape paths properly for Python script
+        $escaped_temp_path = escapeshellarg($temp_path);
+        $escaped_stored_path = escapeshellarg($stored_path);
 
-        // Poll Celery for task status
-        $status_command = escapeshellcmd("celery -A celery_tasks.tasks result $task_id");
-        do {
-            sleep(2);
-            $status_output = shell_exec($status_command);
-        } while (strpos($status_output, '"state": "SUCCESS"') === false);
+        // Call Python script to compare encodings
+        $command = "python compare_encodings.py $escaped_temp_path $escaped_stored_path";
+        $match = trim(shell_exec($command)); // Use trim to remove trailing whitespace
         unlink($temp_path);
-        $result = json_decode($status_output, true);
-        echo json_encode(["match" => $result['match'], "message" => $result['error'] ?? null]);
-        
-    } else {
-        echo json_encode(["match" => false, "message" => "No face data found."]);
-        
-    }
 
+        echo json_encode(['match' => $match === "True"]);
+    } else {
+        echo json_encode(["match" => false, "message" => "No face data found for the provided UUID."]);
+    }
+    unlink($temp_path);
     $stmt->close();
     $conn->close();
 }
 ?>
+

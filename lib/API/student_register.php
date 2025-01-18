@@ -11,17 +11,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $uuid = $_POST['uuid']; // Capture UUID from request
     $class_id = $_POST['class_id']; // Capture class_id from request
 
-    if (isset($_FILES['image'])) {
-        $image = $_FILES['image'];
-        $targetDir = "registered_faces/";
-        $imagePath = $targetDir . basename($image['name']);
-        move_uploaded_file($image['tmp_name'], $targetDir . $image['name']);
-    }
+   
 
     $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
-    $sql = "INSERT INTO `students` (`username`, `password`, `prn_number`, `college_email`, `class_id`, `uuid`, `face_image`) 
-            VALUES ('$username', '$hashedPassword', '$prn', '$email', '$class_id', '$uuid', '$imagePath')";
+    $sql = "INSERT INTO `students` (`username`, `password`, `prn_number`, `college_email`, `class_id`, `uuid`) 
+            VALUES ('$username', '$hashedPassword', '$prn', '$email', '$class_id', '$uuid')";
 
     if ($conn->query($sql) === TRUE) {
         echo "Student registered successfully";

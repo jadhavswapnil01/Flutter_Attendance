@@ -1,28 +1,33 @@
 import face_recognition
 import numpy as np
-import os
+# import os
 from celery import Celery
+import logging
 
 app = Celery('tasks')
 app = Celery(
-    'tasks',
+    'celery_tasks',
     broker='redis://localhost:6379/0',  # Redis as broker
     backend='redis://localhost:6379/0',  # Redis for result storage
 )
 app.conf.update(
+    
+    include=['celery_tasks.tasks'],
     task_serializer='json',
     result_serializer='json',
     accept_content=['json'],
     timezone='UTC',
     enable_utc=True,
 )
-# app.config_from_object('celeryconfig')
+
 
 @app.task(bind=True)
 def generate_encoding(self, image_path):
+    logging.info(f"Received image path: {image_path}")
     try:
         image = face_recognition.load_image_file(image_path)
         encodings = face_recognition.face_encodings(image)
+        
         if len(encodings) > 0:
             return {"success": True, "encoding": encodings[0].tolist()}
         return {"success": False, "error": "NO_FACE_DETECTED"}
