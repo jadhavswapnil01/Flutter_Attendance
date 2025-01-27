@@ -63,7 +63,7 @@ class _ViewAttendanceState extends State<ViewAttendance> {
   }
 
    Future<void> fetchSSID(int classroomId) async {
-    final randomDelay = Random().nextDouble() * 3;
+    final randomDelay = Random().nextDouble() * 5;
       // Delay the API request
       await Future.delayed(Duration(milliseconds: (randomDelay * 1000).toInt()));
     
@@ -93,7 +93,7 @@ class _ViewAttendanceState extends State<ViewAttendance> {
 
   Future<void> fetchClassroomStatus() async {
     
-    final randomDelay = Random().nextDouble() * 3;
+    final randomDelay = Random().nextDouble() * 5;
       // Delay the API request
       await Future.delayed(Duration(milliseconds: (randomDelay * 1000).toInt()));
     final response = await http.post(
@@ -145,7 +145,7 @@ class _ViewAttendanceState extends State<ViewAttendance> {
   
 
   Future<void> fetchAttendanceInfo() async {
-    final randomDelay = Random().nextDouble() * 3;
+    final randomDelay = Random().nextDouble() * 5;
       // Delay the API request
       await Future.delayed(Duration(milliseconds: (randomDelay * 1000).toInt()));
     try {
@@ -226,7 +226,7 @@ showLoadingIndicator(context);
   try {
     final compressedBytes = await _compressImage(image);
     final faceImage = base64Encode(compressedBytes);
-    final randomDelay = Random().nextDouble() * 5;
+    final randomDelay = Random().nextDouble() * 8;
       // Delay the API request
       await Future.delayed(Duration(milliseconds: (randomDelay * 1000).toInt()));
     final response = await http.post(

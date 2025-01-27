@@ -59,7 +59,7 @@ void hideLoadingIndicator(BuildContext context) {
     });
     
   // showLoadingIndicator(context);
-    final randomDelay = Random().nextDouble() * 5;
+    final randomDelay = Random().nextDouble() * 6;
       // Delay the API request
       await Future.delayed(Duration(milliseconds: (randomDelay * 1000).toInt()));
 
@@ -213,7 +213,7 @@ appBar: AppBar(
           // print(index + 1);
           // print(lecType);
           // print(subject);
-           final randomDelay = Random().nextDouble() * 4;
+           final randomDelay = Random().nextDouble() * 6;
       // Delay the API request
       await Future.delayed(Duration(milliseconds: (randomDelay * 1000).toInt()));
 

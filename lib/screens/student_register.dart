@@ -81,7 +81,7 @@ class _StudentRegisterState extends State<StudentRegister> {
       setState(() {
         _isLoading = true;
       });
-      final randomDelay = Random().nextDouble() * 5;
+      final randomDelay = Random().nextDouble() * 7;
       // Delay the API request
       await Future.delayed(Duration(milliseconds: (randomDelay * 1000).toInt()));
     final String studentUuid = uuid.v4();
@@ -106,13 +106,19 @@ class _StudentRegisterState extends State<StudentRegister> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Failed to register student.')),
           );
+          setState(() {
+        _isLoading = true;
+          });
           return;}
         }catch (e) {
         debugPrint('Error: $e');
+        setState(() {
+        _isLoading = true;
+          });
         return;
       }
     // HttpOverrides.global = MyHttpOverrides();
-      final randomDelay2 = Random().nextDouble() * 2;
+      final randomDelay2 = Random().nextDouble() * 4;
       // Delay the API request
       await Future.delayed(Duration(milliseconds: (randomDelay2 * 1000).toInt()));
       final uri = Uri.parse('${APIConstants.baseUrl}/htdocs/attendance_api/student_register.php');
@@ -143,6 +149,9 @@ class _StudentRegisterState extends State<StudentRegister> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Student registered successfully!')),
           );
+           setState(() {
+        _isLoading = true;
+          });
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
@@ -153,9 +162,17 @@ class _StudentRegisterState extends State<StudentRegister> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Failed to register student.')),
           );
+           setState(() {
+        _isLoading = true;
+          });
+          return;
         }
       } catch (e) {
         debugPrint('Error: $e');
+        setState(() {
+        _isLoading = true;
+          });
+          return;
       }
      
       

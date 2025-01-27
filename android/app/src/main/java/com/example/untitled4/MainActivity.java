@@ -298,9 +298,9 @@ public void startScanninguuid1(String uuid) {
 
     // Set UUID to scan for
     ParcelUuid targetUuid = ParcelUuid.fromString(uuid);
-    ScanSettings scanSettings = new ScanSettings.Builder()
-            .setScanMode(ScanSettings.SCAN_MODE_BALANCED)
-            .build();
+    // ScanSettings scanSettings = new ScanSettings.Builder()
+    //         .setScanMode(ScanSettings.SCAN_MODE_BALANCED)
+    //         .build();
 
     // Flag to track if the target UUID was found
     final boolean[] isTargetFound = {false};
@@ -328,7 +328,8 @@ public void startScanninguuid1(String uuid) {
     };
 
     // Start scanning
-    scanner.startScan(null, scanSettings, scanCallback);
+    // scanner.startScan(null, scanSettings, scanCallback);
+    scanner.startScan(scanCallback);
 
     // Stop scanning after 5 seconds and handle the result
     new Handler(Looper.getMainLooper()).postDelayed(() -> {
